@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FUT Мини ⚽</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;color:#fff;min-height:100vh;background:radial-gradient(ellipse at top,#1b3fa8 0,#0a1442 45%,#040920 100%) fixed;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 90px,rgba(0,229,255,.05) 90px 180px)}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px 18px;background:rgba(4,9,32,.85);border-bottom:2px solid #00e5ff;box-shadow:0 0 22px #00e5ff66;position:relative}
+h1{font-size:28px;letter-spacing:1px;text-shadow:0 0 14px #00e5ff}
+h2{text-align:center;margin:14px 0;text-shadow:0 0 10px #00e5ff}
+.coins{font-size:26px;font-weight:900;color:#ffd93b;background:#0007;border:2px solid #ffd93b;border-radius:30px;padding:4px 18px;box-shadow:0 0 16px #ffd93b88}
+.coins.bump{animation:bump .5s}
+@keyframes bump{50%{transform:scale(1.25)}}
+nav{display:flex;gap:10px;justify-content:center;padding:14px 8px;flex-wrap:wrap;position:relative}
+nav button,.btn{font:inherit;font-weight:900;font-size:19px;color:#fff;border:0;border-radius:14px;padding:12px 22px;cursor:pointer;background:linear-gradient(#3a78ff,#1740b8);box-shadow:0 5px 0 #0a1f6b,0 0 16px #2f6bff88;transition:transform .1s}
+nav button:hover,.btn:hover{transform:translateY(-2px)}
+nav button:active,.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #0a1f6b}
+nav button.on{background:linear-gradient(#00f0ff,#0090c8);color:#022;box-shadow:0 5px 0 #005a80,0 0 20px #00e5ff}
+.btn.gold{background:linear-gradient(#ffe45c,#f5a300);color:#4a2c00;box-shadow:0 5px 0 #a86a00,0 0 16px #ffc40088}
+.btn.green{background:linear-gradient(#4cff7a,#12a83d);color:#033;box-shadow:0 5px 0 #0a6b28,0 0 18px #2dff6a88}
+.btn.big{font-size:28px;padding:16px 40px}
+.btn:disabled{filter:grayscale(1);opacity:.6;cursor:not-allowed}
+.btn.sm{font-size:13px;padding:6px 10px}
+#view{max-width:1000px;margin:0 auto;padding:6px 14px 40px;position:relative}
+.row{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:12px 0}
+.card{width:140px;height:200px;position:relative;padding:8px 6px;text-align:center;border:4px solid;border-radius:16px 16px 44px 44px/16px 16px 34px 34px;font-weight:900;overflow:hidden}
+.card .ovr{position:absolute;left:8px;top:6px;font-size:30px;line-height:.95;text-align:left}
+.card .ovr small{display:block;font-size:13px}
+.card .face{font-size:50px;margin-top:8px;filter:drop-shadow(0 3px 2px #0005)}
+.card .club{position:absolute;right:7px;top:8px;font-size:11px}
+.card .nm{font-size:14px;border-bottom:2px solid #0004;padding-bottom:2px;margin:2px 4px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .st{display:grid;grid-template-columns:1fr 1fr;gap:1px 4px;font-size:12px;padding:0 6px}
+.card .st span{text-align:left}.card .st b{font-size:14px}
+.card .skl{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:14px;letter-spacing:2px}
+.card .lvlstars{font-size:10px;color:#ffd93b;letter-spacing:1px}
+.bronze{background:linear-gradient(160deg,#f0b585,#a45f2a 60%,#7a4018);border-color:#c8803d;color:#3a1c06}
+.silver{background:linear-gradient(160deg,#fafcff,#aab6c4 60%,#7d8998);border-color:#dfe7f0;color:#1c2733}
+.gold{background:linear-gradient(160deg,#fff0a0,#e0b020 60%,#b07d00);border-color:#ffd93b;color:#4a2c00;box-shadow:0 0 12px #ffd93b99}
+.epic{background:linear-gradient(160deg,#e0b3ff,#9b3dff 60%,#5a0fa8);border-color:#d99bff;color:#fff;box-shadow:0 0 18px #b96bff99}
+.icon{background:linear-gradient(135deg,#fff 0,#fff3b8 35%,#fff 60%,#ffe27a);border-color:#fff;color:#6b4a00;animation:glow 1.6s infinite alternate}
+.icon .face{animation:float 2s infinite alternate ease-in-out}
+.card.son{background:linear-gradient(135deg,#fff,#ffd6f5 30%,#c9f4ff 55%,#fff7b0 80%,#fff);border-color:#ff5ce1;animation:glow 1s infinite alternate,rainbow 4s linear infinite}
+@keyframes glow{from{box-shadow:0 0 12px #fff,0 0 24px #ffd93b}to{box-shadow:0 0 22px #fff,0 0 48px #ffd93b,0 0 70px #fff6}}
+@keyframes float{to{transform:translateY(-4px) scale(1.08)}}
+@keyframes rainbow{to{filter:hue-rotate(360deg)}}
+.card.locked{background:#101a4a;border-color:#2b3b8f;color:#5b6bbf;box-shadow:none;animation:none}
+.card.locked .face{filter:grayscale(1) brightness(.5)}
+.packs{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:10px}
+.pack{width:250px;padding:18px;border-radius:20px;text-align:center;background:linear-gradient(#162a7a,#0a1650);border:3px solid;animation:pulse 2.4s infinite alternate}
+.pack .pk{font-size:76px;filter:drop-shadow(0 0 14px currentColor)}
+.pack h3{font-size:24px;margin:4px 0}.pack p{font-size:14px;min-height:56px;color:#cfe;margin-bottom:10px}
+.pack.bronze{border-color:#c8803d;color:#e9a867}.pack.gold{border-color:#ffd93b;color:#ffd93b}
+.pack.mega{border-color:#ff5ce1;color:#ff8cec;box-shadow:0 0 24px #ff5ce1aa}
+.pack p,.pack h3{color:#fff}
+@keyframes pulse{to{transform:translateY(-6px)}}
+.flip{perspective:900px;width:140px;height:200px;cursor:pointer;position:relative}
+.flip-in{position:relative;width:100%;height:100%;transition:transform .7s;transform-style:preserve-3d}
+.flip.open .flip-in{transform:rotateY(180deg)}
+.front,.back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{transform:rotateY(180deg)}
+.front{border-radius:16px 16px 44px 44px/16px 16px 34px 34px;border:4px solid #00e5ff;background:repeating-linear-gradient(45deg,#13308f 0 12px,#0b1f66 12px 24px);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:50px;box-shadow:0 0 18px #00e5ff88}
+.front b{font-size:22px;color:#00e5ff;letter-spacing:3px}
+.flip:not(.open):hover .front{transform:scale(1.05)}
+.flip.flash:after{content:"";position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(circle,#fff,#ffd93b88 40%,transparent 70%);animation:flash .8s forwards;pointer-events:none}
+@keyframes flash{0%{opacity:0;transform:scale(.3)}30%{opacity:1}100%{opacity:0;transform:scale(1.8)}}
+.dup,.new{position:absolute;left:0;right:0;bottom:-26px;text-align:center;font-weight:900;font-size:14px;color:#ffd93b}
+.new{color:#4cff7a}
+.sf{position:fixed;inset:0;background:#fff;animation:sf .7s forwards;pointer-events:none;z-index:50}
+@keyframes sf{from{opacity:.9}to{opacity:0}}
+.cf{position:fixed;top:-30px;font-size:28px;pointer-events:none;z-index:60;animation:fall 2.6s linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(720deg)}}
+/* ===== ПОЛЕ: 620px, scale .52, не пересекаются ===== */
+.teamr{text-align:center;margin:6px 0}
+.teamr small{font-size:15px;color:#8fd;letter-spacing:1px}
+.teamr .big{font-size:86px;font-weight:900;line-height:1;color:#ffd93b;text-shadow:0 0 22px #ffd93b}
+.field{position:relative;width:min(440px,100%);height:620px;margin:10px auto;border-radius:18px;border:4px solid #fff;background:repeating-linear-gradient(0deg,#1f9d43 0 62px,#23b04c 62px 124px);box-shadow:0 0 30px #00e5ff66}
+.field:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:3px solid #fff9}
+.field:after{content:"";position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px;border:3px solid #fff9;border-radius:50%}
+.slot{position:absolute;width:140px;height:200px;transform:translate(-50%,-50%) scale(.52);cursor:pointer;z-index:2;transition:transform .15s}
+.slot:hover{transform:translate(-50%,-50%) scale(.56)}
+.slot .empty{width:100%;height:100%;border:5px dashed #fffd;border-radius:20px;background:#0005;font-size:44px;font-weight:900;display:flex;align-items:center;justify-content:center;text-align:center;animation:pulse 1.5s infinite alternate}
+.modal{position:fixed;inset:0;background:#000b;z-index:40;display:flex;align-items:center;justify-content:center;padding:14px}
+.modal>div{background:#0b1650;border:3px solid #00e5ff;border-radius:18px;padding:16px;max-width:820px;max-height:88vh;overflow:auto;width:100%}
+.modal .card{cursor:pointer}.modal .card:hover{transform:scale(1.06)}
+.modal .pickcell{text-align:center}
+.vs{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap;margin:10px 0}
+.tm{text-align:center;background:#0b1650;border:2px solid #00e5ff;border-radius:16px;padding:12px 22px;min-width:200px}
+.tm .em{font-size:50px}.tm .rt{font-size:46px;font-weight:900;color:#ffd93b}
+.vsx{font-size:36px;font-weight:900;color:#ff5c8a;text-shadow:0 0 14px #ff5c8a}
+.score{text-align:center;font-size:64px;font-weight:900;margin:8px 0;text-shadow:0 0 18px #00e5ff}
+#log{max-width:640px;margin:16px auto;display:flex;flex-direction:column;gap:8px}
+.ln{background:#0b1650;border-left:6px solid #3a78ff;border-radius:10px;padding:10px 14px;font-size:18px;animation:in .4s}
+.ln.g{border-color:#4cff7a;background:#0f4a33;font-weight:900;font-size:20px}
+.ln.b{border-color:#ff5c8a;background:#4a1030}
+.ln.r{text-align:center;font-size:30px;font-weight:900;border-color:#ffd93b;background:#2b2a05}
+@keyframes in{from{opacity:0;transform:translateX(-30px)}}
+.wins{text-align:center;margin-top:14px;font-size:18px;color:#8fd}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#ff5c8a;color:#fff;font-weight:900;padding:12px 24px;border-radius:30px;z-index:70;animation:in .3s}
+.cup-grid{max-width:520px;margin:14px auto;padding:12px;background:#0b1650;border:2px solid #ffd93b;border-radius:16px}.cup-step{padding:12px;text-align:center;border:2px solid #2b3b8f;border-radius:12px}.cup-step.active{border-color:#ffd93b;box-shadow:0 0 12px #ffd93b}.cup-step small{display:block;color:#8fd}.cup-down{text-align:center;color:#ffd93b;font-size:24px}
+.tactics{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.tactics .btn{font-size:16px;padding:10px 16px;opacity:.7}
+.tactics .btn.on{opacity:1;background:linear-gradient(#ffe45c,#f5a300);color:#4a2c00;box-shadow:0 5px 0 #a86a00,0 0 16px #ffc40088}
+.sklbox{max-width:640px;margin:14px auto;background:#0b1650;border:2px solid #00e5ff;border-radius:14px;padding:12px 16px;text-align:left}
+.sklbox h3{text-align:center;margin-bottom:8px;color:#ffd93b}
+.sklbox .sklrow{font-size:15px;padding:4px 0;border-bottom:1px dashed #2b3b8f}
+.sklbox .sklrow:last-child{border:0}
+/* ===== ДИВИЗИОН: очки + награда ===== */
+.divbar{text-align:center;font-size:17px;margin:6px 0;background:#0b1650;border:2px solid #00e5ff;border-radius:12px;padding:8px 14px;display:inline-block;line-height:1.5}
+.divbar b{color:#ffd93b}
+.divbar .next{font-size:13px;color:#8fd;margin-top:2px}
+.progress{height:10px;background:#0a1442;border-radius:6px;overflow:hidden;margin-top:6px;border:1px solid #2b3b8f}
+.progress > div{height:100%;background:linear-gradient(90deg,#4cff7a,#12a83d);transition:width .4s}
+.pen{text-align:center}
+.pen .dirs{display:flex;gap:18px;justify-content:center;margin:16px 0}
+.pen .dirs .btn{font-size:40px;padding:16px 28px}
+.pen .stat{font-size:26px;font-weight:900;margin:8px 0}
+.pen .stat b{color:#ffd93b}
+.ach{max-width:760px;margin:0 auto}
+.ach .aitem{display:flex;align-items:center;gap:12px;background:#0b1650;border:2px solid #2b3b8f;border-radius:14px;padding:10px 14px;margin:8px 0}
+.ach .aitem.done{border-color:#4cff7a;background:#0f3a28}
+.ach .aitem .icon{font-size:32px;width:44px;text-align:center}
+.ach .aitem .info{flex:1}
+.ach .aitem .info b{font-size:16px}
+.ach .aitem .info .desc{font-size:13px;color:#9ac;margin:2px 0}
+.ach .aitem .info .prog{height:6px;background:#0a1442;border-radius:4px;overflow:hidden;margin-top:4px}
+.ach .aitem .info .prog > div{height:100%;background:linear-gradient(90deg,#ffd93b,#f5a300);transition:width .4s}
+.ach .aitem .rw{font-weight:900;color:#ffd93b;font-size:16px;min-width:60px;text-align:right}
+.ach .aitem.done .rw{color:#4cff7a}
+.seasonbar{text-align:center;margin:6px 0 10px;font-size:16px;color:#8fd}
+.seasonbar b{color:#ffd93b}
+.train{max-width:700px;margin:0 auto}
+.train .trow{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.train .tcard{width:200px;padding:14px;border-radius:16px;background:linear-gradient(#162a7a,#0a1650);border:3px solid #3a78ff;text-align:center}
+.train .tcard .ic{font-size:48px}
+.train .tcard h3{font-size:20px;margin:4px 0}
+.train .tcard p{font-size:13px;color:#9ac;min-height:40px}
+.train .tcard button{margin-top:6px}
+.mg{text-align:center;padding:10px}
+.mg .hint{font-size:18px;color:#8fd;margin:6px 0 14px}
+.mg .stage{position:relative;width:min(320px,90vw);height:220px;margin:10px auto;background:#0a1442;border:3px solid #00e5ff;border-radius:16px;overflow:hidden}
+.mg .goal{position:absolute;left:50%;top:0;transform:translateX(-50%);width:260px;height:90px;border:4px solid #ffd93b;border-top:0;border-radius:0 0 8px 8px;background:repeating-linear-gradient(0deg,#fff2 0 8px,transparent 8px 16px)}
+.mg .target{position:absolute;font-size:40px;transition:transform .1s;cursor:pointer}
+.mg .miss{position:absolute;font-size:20px;color:#ff5c8a}
+.mg .arrow{font-size:48px;background:#0b1650;border:2px solid #00e5ff;border-radius:12px;padding:8px 18px;margin:6px;cursor:pointer;user-select:none}
+.mg .arrow:active{background:#00e5ff;color:#022}
+.mg .seq{font-size:40px;letter-spacing:6px;margin:10px 0}
+.mg .seq .hit{color:#4cff7a}
+.mg .seq .cur{color:#ffd93b;animation:pulse 1s infinite alternate}
+.bstbox{max-width:640px;margin:14px auto;background:#0b1650;border:2px solid #ffd93b;border-radius:14px;padding:12px 16px;text-align:left}
+.bstbox h3{text-align:center;margin-bottom:8px;color:#ffd93b}
+.bstbox .brow{font-size:15px;padding:4px 0;border-bottom:1px dashed #2b3b8f}
+.bstbox .brow:last-child{border:0}
+footer{text-align:center;padding:10px 0 24px}
+footer button{background:none;border:1px solid #567;color:#89a;border-radius:8px;padding:5px 12px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+:root{--sat:env(safe-area-inset-top,0px);--sar:env(safe-area-inset-right,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px)}html{touch-action:manipulation}body{min-height:100vh;min-height:100dvh;padding:0 var(--sar) var(--sab) var(--sal);touch-action:manipulation}button,.btn,.flip,.slot,.target,.arrow{touch-action:manipulation}.modal{padding:calc(14px + var(--sat)) calc(14px + var(--sar)) calc(14px + var(--sab)) calc(14px + var(--sal));overscroll-behavior:contain}.modal>div{max-height:calc(88dvh - var(--sat) - var(--sab));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}body.modal-open{position:fixed;width:100%;overflow:hidden}@media(max-width:600px){header{padding-top:calc(12px + var(--sat))}.field{width:min(440px,calc(100vw - 28px - var(--sal) - var(--sar)));height:min(620px,calc(100dvh - 250px))}</style></head>
+<body>
+<header><h1>⚽ FUT МИНИ</h1><button id="soundToggle" class="btn sm" onclick="toggleSound()">🔇</button><div class="coins" id="coins"></div></header>
+<nav id="nav"></nav>
+<div id="view"></div>
+<footer><button onclick="resetAll()">Начать игру заново</button></footer>
+<div id="modal" class="modal" style="display:none" onclick="if(event.target===this)closeM()"><div id="mbox"></div></div>
+<script>
+const SON_NAME="Смирнов М";
+const TEAM_NAME="Алмазные гончие";
+const TEAM_EMOJI="💎";
+const CLUB_LABEL="🔴⚪";
+const POS=["ВРТ","ЗАЩ","ЗАЩ","ЗАЩ","ПЗ","ПЗ","НАП"], EM={"ВРТ":"🧤","ЗАЩ":"🛡️","ПЗ":"🎯","НАП":"⚽"};
+const LBL=["СКР","УДР","ПАС","ЗАЩ"];
+const RN={bronze:"Бронза",silver:"Серебро",gold:"Золото",epic:"Эпик",icon:"Кумир"};
+const SELL={bronze:50,silver:100,gold:200,epic:350,icon:500};
+const RAW=[
+["Месси","НАП",91,0,0],["Роналду","НАП",90,0,0],["Пеле","НАП",96,0,0],["Яшин","ВРТ",93,0,0],["Марадона","ПЗ",94,0,0],
+["Мбаппе","НАП",89,0,0],["Холанд","НАП",89,0,0],["Де Брюйне","ПЗ",88,0,0],["Ван Дейк","ЗАЩ",88,0,0],["Алиссон","ВРТ",87,0,0],["Салах","НАП",87,0,0],
+["Винисиус","НАП",87,0,0],["Нойер","ВРТ",86,0,0],["Беллингем","ПЗ",86,0,0],["Модрич","ПЗ",85,0,0],["Хакими","ЗАЩ",84,0,0],["Рюдигер","ЗАЩ",83,0,0],["Каземиро","ПЗ",82,0,0],
+["Промес","ПЗ",79,1,0],["Акинфеев","ВРТ",78,0,0],["Дзюба","НАП",77,0,0],["Соболев","НАП",76,1,0],["Игнашевич","ЗАЩ",74,0,0],["Максименко","ВРТ",73,1,0],["Джикия","ЗАЩ",72,1,0],["Зобнин","ПЗ",71,1,0],
+["Школьный Бомбардир","НАП",68,0,0],["Стена из 5Б","ЗАЩ",67,0,0],["Литвинов","ЗАЩ",66,1,0],["Сосед Вася","ПЗ",65,0,0],
+["Дворовый Нападающий","НАП",63,0,0],["Дворовый Защитник","ЗАЩ",62,0,0],["Дворовый Полузащитник","ПЗ",61,0,0],["Дворовый Вратарь","ВРТ",60,0,0],
+["Зидан","ПЗ",92,0,0],["Рональдиньо","ПЗ",91,0,0],["Буффон","ВРТ",90,0,0],["Мальдини","ЗАЩ",90,0,0],
+["Роналдо","НАП",94,0,0],["Кройф","НАП",93,0,0],["Бекхэм","ПЗ",89,0,0],["Кантона","НАП",88,0,0],
+["Кейн","НАП",88,0,0],["Левандовски","НАП",89,0,0],["Куртуа","ВРТ",88,0,0],["Фоден","ПЗ",86,0,0],
+["Родри","ПЗ",87,0,0],["Салиба","ЗАЩ",86,0,0],["Трент","ЗАЩ",85,0,0],["Алаба","ЗАЩ",85,0,0],
+["Бакаев","ПЗ",70,1,0],["Умяров","ПЗ",68,1,0],["Мартинс","НАП",72,1,0],["Дуарте","ЗАЩ",69,1,0],
+["Бабушкин Вратарь","ВРТ",58,0,0],["Кот Барсик","НАП",55,0,0],["Школьный Судья","ЗАЩ",54,0,0],
+["Тренер по Физре","ПЗ",57,0,0],["Мяч из 2008","НАП",52,0,0],
+["Тотти","ПЗ",90,0,1],["Дель Пьеро","НАП",89,0,1],["Джеррард","ПЗ",89,0,1],["Лэмпард","ПЗ",89,0,1],["Анри","НАП",91,0,1],
+["Кака","ПЗ",90,0,1],["Пуйоль","ЗАЩ",88,0,1],["Каннаваро","ЗАЩ",89,0,1],["Виейра","ПЗ",87,0,1],["Недвед","ПЗ",87,0,1],
+["Тюрам","ЗАЩ",86,0,1],["Фигу","ПЗ",89,0,1],["Рауль","НАП",90,0,1],["Оуэн","НАП",85,0,1],["Шевченко","НАП",89,0,1],
+["Ибрагимович","НАП",90,0,1],["Роббен","НАП",88,0,1],["Терри","ЗАЩ",86,0,1],["Фердинанд","ЗАЩ",85,0,1],["Скоулз","ПЗ",84,0,1],
+["Марта","НАП",90,0,2],["Мишель Морган","НАП",87,0,2],["Алексия Путельяс","ПЗ",89,0,2],["Ада Хегерберг","НАП",88,0,2],
+["Венди Ренар","ЗАЩ",86,0,2],["Люси Бронз","ЗАЩ",85,0,2],["Сара Бенни","ПЗ",84,0,2],["Карли Ллойд","НАП",85,0,2],
+["Хоуп Соло","ВРТ",87,0,2],["Сара Буадди","НАП",83,0,2],["Амандин Энри","ПЗ",83,0,2],["Елена Мораче","ВРТ",84,0,2],
+["Кира Хэмптон","НАП",82,0,2],["Линдсей Хоран","ПЗ",83,0,2],["Кристин Синклер","НАП",86,0,2],
+["Пёс Рекс","НАП",60,0,3],["Мяч в окне","ЗАЩ",58,0,3],["Дядя Витя","ВРТ",62,0,3],["Соседка Зина","ПЗ",55,0,3],
+["Вратарь из ЖЭКа","ВРТ",56,0,3],["Штанга","ЗАЩ",59,0,3],["Хомяк","ПЗ",52,0,3],["Кепка Неделько","ПЗ",58,0,3],
+["Бутсы 43-го","НАП",57,0,3],["Фанат на трибуне","НАП",54,0,3],["Комментатор","ПЗ",61,0,3],["Физрук","ЗАЩ",63,0,3],
+// Барселона
+["Хави","ПЗ",90,0,0],["Иньеста","ПЗ",90,0,0],["Пике","ЗАЩ",86,0,0],["Бускетс","ПЗ",87,0,0],
+["Альба","ЗАЩ",85,0,0],["Суарес","НАП",89,0,0],["Неймар","НАП",90,0,0],["Это'О","НАП",88,0,0],
+["Вилья","НАП",87,0,0],["Ямал","НАП",84,0,0],["Педри","ПЗ",85,0,0],["Гави","ПЗ",83,0,0],
+["Тер Стеген","ВРТ",88,0,0],["Кунде","ЗАЩ",85,0,0],["Араухо","ЗАЩ",84,0,0],["Де Йонг","ПЗ",85,0,0],
+["Рафинья","НАП",84,0,0],["Бальде","ЗАЩ",82,0,0],["Вальдес","ВРТ",86,0,0],["Дани Алвес","ЗАЩ",85,0,0],
+// Реал
+["Касильяс","ВРТ",91,0,0],["Рамос","ЗАЩ",90,0,0],["Марсело","ЗАЩ",87,0,0],["Бензема","НАП",90,0,0],
+["Кроос","ПЗ",89,0,0],["Карвахаль","ЗАЩ",85,0,0],["Родриго","НАП",84,0,0],["Вальверде","ПЗ",86,0,0],
+// Бавария
+["Лам","ЗАЩ",89,0,0],["Швайнштайгер","ПЗ",87,0,0],["Мюллер","ПЗ",87,0,0],["Рибери","НАП",89,0,0],
+["Киммих","ПЗ",87,0,0],["Дэвис","ЗАЩ",85,0,0],["Кан","ВРТ",91,0,0],["Боатенг","ЗАЩ",85,0,0],
+// Ливерпуль
+["Мане","НАП",88,0,0],["Фирмино","НАП",86,0,0],["Хендерсон","ПЗ",84,0,0],["Робертсон","ЗАЩ",85,0,0],
+["Алонсо","ПЗ",86,0,0],["Каррагер","ЗАЩ",85,0,0],["Даглиш","НАП",87,0,0],
+// МЮ
+["Руни","НАП",89,0,0],["Гиггз","ПЗ",88,0,0],["Видич","ЗАЩ",87,0,0],["ван Нистелрой","НАП",88,0,0],
+["Солскьяер","НАП",84,0,0],["Кин","ПЗ",87,0,0]
+];
+const W={"ВРТ":[-14,-18,-6,4],"ЗАЩ":[-6,-14,-6,6],"ПЗ":[-4,-6,4,-8],"НАП":[4,5,-4,-22]};
+const DB=RAW.map((a,i)=>{let h=0;for(const ch of a[0])h=(h*31+ch.charCodeAt(0))%997;
+ return {id:i,n:a[0],p:a[1],o:a[2],c:a[3]||0,season:a[4]||0,st:W[a[1]].map((w,k)=>Math.max(30,Math.min(99,a[2]+w+((h>>(k*2))%9)-4)))}});
+const SON={id:DB.length,n:SON_NAME,p:"НАП",o:99,s:1,c:0,season:0,st:[99,99,97,88]}; DB.push(SON);
+const rar=o=>o>=90?"icon":o>=85?"epic":o>=80?"gold":o>=70?"silver":"bronze";
+const byName=n=>DB.find(c=>c.n===n).id;
+const PACKS={
+ bronze:{name:"Бронзовый пак",e:"📦",price:200,n:3,w:[72,26,2,0,0],son:0,d:"3 карты. Чаще бронза и серебро."},
+ gold:{name:"Золотой пак",e:"🎁",price:500,n:4,w:[20,45,30,4.5,0.5],son:.01,d:"4 карты. Много золота, редкий Эпик."},
+ mega:{name:"Мега-пак",e:"💎",price:1000,n:5,w:[0,30,55,14,1],son:.025,d:"5 карт. Шанс на Эпик и очень редкого Кумира!"}
+};
+const TACTICS={
+ attack: {name:"⚔️ Атака",  mod:+6,  reward:1.3,  desc:"Больше голов, но и риск пропустить"},
+ balance:{name:"⚖️ Баланс", mod:0,   reward:1.0,  desc:"Надёжно и предсказуемо"},
+ defense:{name:"🛡️ Оборона",mod:-4,  reward:0.85, desc:"Меньше голов, но сложнее победить"}
+};
+// ===== 8 ДИВИЗИОНОВ: req = ОЧКИ (победа 3, ничья 1, поражение 0) =====
+const DIVISIONS=[
+ {name:"Бронза",     em:"🥉", req:15, bonus:300,  oppMin:55, oppMax:66},
+ {name:"Серебро",    em:"🥈", req:18, bonus:500,  oppMin:66, oppMax:73},
+ {name:"Золото",     em:"🥇", req:21, bonus:800,  oppMin:73, oppMax:79},
+ {name:"Платина",    em:"💎", req:24, bonus:1200, oppMin:79, oppMax:84},
+ {name:"Изумруд",    em:"💚", req:30, bonus:1800, oppMin:84, oppMax:88},
+ {name:"Эпик",       em:"💜", req:36, bonus:2500, oppMin:88, oppMax:92},
+ {name:"Легенда",    em:"👑", req:45, bonus:4000, oppMin:92, oppMax:96},
+ {name:"Бессмертный",em:"🔥", req:999,bonus:0,    oppMin:96, oppMax:99}
+];
+const SKILLS={
+ sniper:  {n:"Снайпер",      e:"🎯", d:"+8% шанс гола в атаке"},
+ poacher: {n:"Хищник",       e:"🦅", d:"+5% шанс гола"},
+ power:   {n:"Мощь",         e:"💪", d:"+3 к рейтингу команды"},
+ maestro: {n:"Маэстро",      e:"🎼", d:"+5% шанс гола команде"},
+ wall:    {n:"Стена",        e:"🧱", d:"-10% шанс пропустить"},
+ engine:  {n:"Мотор",        e:"⚙️", d:"+4% шанс гола"},
+ rock:    {n:"Скала",        e:"🪨", d:"-8% шанс пропустить"},
+ tackle:  {n:"Отбор",        e:"🦶", d:"-6% шанс пропустить"},
+ safe:    {n:"Надёжные руки",e:"🧤", d:"-15% шанс пропустить"},
+ reflex:  {n:"Рефлекс",      e:"⚡", d:"-10% шанс пропустить"},
+ captain: {n:"Капитан",      e:"🎖️", d:"+2 к рейтингу команды"},
+ lucky:   {n:"Везунчик",     e:"🍀", d:"+50 💰 к награде за матч"},
+ clutch:  {n:"Клатч",        e:"🔥", d:"+6% шанс гола"}
+};
+const BASE_SKILL={ВРТ:"safe",ЗАЩ:"rock",ПЗ:"maestro",НАП:"sniper"};
+const UNIQUE_SKILL={
+ "Месси":"maestro","Роналду":"clutch","Пеле":"poacher","Яшин":"reflex","Марадона":"maestro",
+ "Холанд":"power","Мбаппе":"sniper","Де Брюйне":"maestro","Ван Дейк":"wall","Алиссон":"safe",
+ "Нойер":"reflex","Салах":"poacher","Беллингем":"engine","Модрич":"maestro","Хакими":"tackle",
+ "Зидан":"maestro","Рональдиньо":"maestro","Буффон":"safe","Мальдини":"rock","Роналдо":"poacher",
+ "Кройф":"engine","Бекхэм":"maestro","Кантона":"clutch","Кейн":"sniper","Левандовски":"poacher",
+ "Куртуа":"safe","Фоден":"engine","Родри":"wall","Салиба":"rock","Трент":"tackle","Алаба":"wall",
+ "Промес":"clutch","Соболев":"poacher","Максименко":"safe","Джикия":"rock","Зобнин":"engine",
+ "Бакаев":"engine","Умяров":"tackle","Мартинс":"sniper","Дуарте":"rock",
+ "Тотти":"maestro","Дель Пьеро":"poacher","Джеррард":"engine","Лэмпард":"maestro","Анри":"sniper",
+ "Кака":"maestro","Пуйоль":"rock","Каннаваро":"wall","Виейра":"tackle","Недвед":"engine",
+ "Тюрам":"rock","Фигу":"maestro","Рауль":"poacher","Оуэн":"sniper","Шевченко":"sniper",
+ "Ибрагимович":"power","Роббен":"sniper","Терри":"wall","Фердинанд":"rock","Скоулз":"engine",
+ "Марта":"maestro","Мишель Морган":"sniper","Алексия Путельяс":"maestro","Ада Хегерберг":"poacher",
+ "Венди Ренар":"rock","Люси Бронз":"tackle","Сара Бенни":"engine","Карли Ллойд":"clutch",
+ "Хоуп Соло":"safe","Сара Буадди":"sniper","Амандин Энри":"engine","Елена Мораче":"reflex",
+ "Кира Хэмптон":"sniper","Линдсей Хоран":"wall","Кристин Синклер":"clutch",
+ "Пёс Рекс":"lucky","Дядя Витя":"safe","Штанга":"rock","Физрук":"wall",
+ "Хави":"maestro","Иньеста":"maestro","Пике":"rock","Бускетс":"tackle","Альба":"engine",
+ "Суарес":"poacher","Неймар":"sniper","Это'О":"poacher","Вилья":"sniper","Ямал":"sniper",
+ "Педри":"maestro","Гави":"engine","Тер Стеген":"safe","Кунде":"tackle","Араухо":"rock",
+ "Де Йонг":"engine","Рафинья":"sniper","Бальде":"tackle","Вальдес":"safe","Дани Алвес":"engine",
+ "Касильяс":"reflex","Рамос":"wall","Марсело":"engine","Бензема":"poacher",
+ "Кроос":"maestro","Карвахаль":"tackle","Родриго":"sniper","Вальверде":"engine",
+ "Лам":"engine","Швайнштайгер":"maestro","Мюллер":"poacher","Рибери":"sniper",
+ "Киммих":"engine","Дэвис":"tackle","Кан":"reflex","Боатенг":"rock",
+ "Мане":"sniper","Фирмино":"poacher","Хендерсон":"engine","Робертсон":"tackle",
+ "Алонсо":"maestro","Каррагер":"rock","Даглиш":"poacher",
+ "Руни":"clutch","Гиггз":"maestro","Видич":"rock","ван Нистелрой":"poacher",
+ "Солскьяер":"poacher","Кин":"tackle"
+};
+const MAXLVL_OF={bronze:3,silver:4,gold:4,epic:5,icon:5};
+function maxLvlOf(c){return MAXLVL_OF[rar(c.o)]}
+const UPCOST={bronze:80,silver:150,gold:300,epic:600,icon:1200};
+function upCost(c){
+ const base=UPCOST[rar(c.o)];
+ const lv=lvlOf(c.id);
+ const mult=[0,1,2.2,4.5,9][lv]||1;
+ return Math.round(base*mult);
+}
+const BOOSTERS={
+ strike:    {n:"Удар",      e:"⚡", d:"+2 к рейтингу команды"},
+ shield:    {n:"Защита",    e:"🛡️", d:"-15% шанс пропустить"},
+ luck:      {n:"Удача",     e:"🍀", d:"+100💰 к награде"},
+ speed:     {n:"Скорость",  e:"💨", d:"+1 к рейтингу команды"},
+ pass:      {n:"Пас",       e:"🎯", d:"+1 к рейтингу команды"},
+ motivation:{n:"Мотивация", e:"🔥", d:"+5 к рейтингу команды"}
+};
+const BOOSTER_DROP=.15;
+const ACHS=[
+ ["first_goal","⚽","Первый гол","Забей первый гол в матче",1,100,s=>s.stats.goals>=1],
+ ["goal_10","🥅","Бомбардир","Забей 10 голов",10,300,s=>s.stats.goals>=10],
+ ["goal_50","🎯","Снайпер","Забей 50 голов",50,1000,s=>s.stats.goals>=50],
+ ["win_3","🏆","Хет-трик побед","Выиграй 3 матча подряд",3,500,s=>s.bestStreak>=3],
+ ["win_10","👑","Непобедимый","Выиграй 10 матчей",10,800,s=>s.stats.wins>=10],
+ ["div_2","🥈","Серебряный","Дойди до Серебра",1,400,s=>s.div>=1],
+ ["div_5","👑","Легенда","Дойди до Легенды",6,3000,s=>s.div>=6],
+ ["div_8","🔥","Бессмертный","Дойди до Бессмертного",7,6000,s=>s.div>=7],
+ ["pen_win","🥅","Победитель пенальти","Выиграй по пенальти",1,200,s=>s.stats.penWins>=1],
+ ["collect_30","📚","Коллекционер","Собери 30 карт",30,500,s=>s.stats.collected>=30],
+ ["collect_80","📚","Библиотекарь","Собери 80 карт",80,1500,s=>s.stats.collected>=80],
+ ["collect_130","🏛️","Музей","Собери 130 карт",130,3000,s=>s.stats.collected>=130],
+ ["up_5","⬆️","Мастер прокачки","Прокачай карту до 5 ур.",1,300,s=>Object.values(s.lvl).some(v=>v>=5)],
+ ["epic_10","💜","Эпик-хантер","Собери 10 Эпиков",1,1500,s=>DB.filter(c=>!c.s&&rar(c.o)==="epic"&&s.own[c.id]).length>=10],
+ ["daily_7","🔥","Постоянный","Заходи 7 дней подряд",7,1500,s=>s.streak>=7],
+ ["pack_10","🎁","Лудоман","Открой 10 паков",10,400,s=>s.stats.packs>=10],
+ ["season_1","🗓️","Сезонный","Собери 5 карт сезона",5,600,s=>seasonCollected(s)>=5],
+ ["train_3","🏋️","Тренированный","Проведи 3 успешные тренировки",3,400,s=>s.stats.trainOk>=3],
+ ["train_10","💪","Спортсмен","Проведи 10 успешных тренировок",10,1200,s=>s.stats.trainOk>=10]
+];
+function seasonCollected(s){return DB.filter(c=>c.season===currentSeason()&&!c.s&&s.own[c.id]).length}
+const KEY="fut_mini_v1";
+let S=load(), tab="shop", pulled=null, busy=false; if(window.__badSave)setTimeout(()=>toast("⚠️ Сохранение повреждено, повреждённая копия сохранена отдельно"),0);
+let tactic="balance", finished=false, matchTimers=[], penaltyOpen=false, trainingOpen=false;
+function fresh(){
+ const st=[
+  byName("Дворовый Вратарь"),byName("Дворовый Защитник"),byName("Литвинов"),byName("Стена из 5Б"),
+  byName("Дворовый Полузащитник"),byName("Сосед Вася"),byName("Дворовый Нападающий")
+ ];
+ const own={};st.forEach(i=>own[i]=1);
+ return{
+  coins:1000,own,lineup:st,wins:0,next:null,lvl:{},div:0,divPoints:0,daily:"",streak:0,cup:{active:false,stage:0,trophies:0,freePacks:0},
+  season:0,
+  stats:{goals:0,wins:0,penWins:0,collected:0,packs:0,matches:0,trainOk:0},
+  achDone:{},bestStreak:0,
+  trainToday:"",trainUsed:0,trainBonus:{},
+  boosters:{}
+ };
+}
+function load(){const d=fresh();try{const raw=localStorage.getItem(KEY);if(!raw)return d;const x=JSON.parse(raw);if(!x||typeof x!=='object'||Array.isArray(x)||!x.own||typeof x.own!=='object')throw Error('bad save');const n=(v,f,min=0,max=1e9)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):f;const own={};for(const k of Object.keys(x.own)){const id=+k;if(Number.isInteger(id)&&id>=0&&id<DB.length&&x.own[k])own[id]=1}if(!Object.keys(own).length)throw Error('no cards');const stats={...d.stats,...(x.stats||{})};for(const k of Object.keys(d.stats))stats[k]=n(stats[k],0);const lvl={};if(x.lvl&&typeof x.lvl==='object')for(const[k,v]of Object.entries(x.lvl)){const id=+k;if(Number.isInteger(id)&&id>=0&&id<DB.length)lvl[id]=n(v,1,1,20)}const today=new Date().toDateString();let trainToday=typeof x.trainToday==='string'?x.trainToday:'',trainUsed=n(x.trainUsed,0,0,3);if(trainToday!==today){trainToday=today;trainUsed=0}const lineup=Array.from({length:7},(_,i)=>{const id=Array.isArray(x.lineup)?x.lineup[i]:null;return Number.isInteger(id)&&id>=0&&id<DB.length&&own[id]?id:d.lineup[i]});const z={...d,...x,cup:(()=>{let c=x.cup;if(!c||typeof c!=='object')return d.cup;return {active:!!c.active,stage:n(c.stage,0,0,3),trophies:n(c.trophies,0),freePacks:n(c.freePacks,0,0,1),matchPending:!!c.matchPending}})(),own,lineup,lvl,stats,trainToday,trainUsed,coins:n(x.coins,d.coins),wins:n(x.wins,0),div:n(x.div,0,0,DIVISIONS.length-1),divPoints:n(x.divPoints,x.divWins?n(x.divWins,0)*3:0),streak:n(x.streak,0),bestStreak:n(x.bestStreak,0),daily:typeof x.daily==='string'?x.daily:'',achDone:x.achDone&&typeof x.achDone==='object'?x.achDone:{},trainBonus:x.trainBonus&&typeof x.trainBonus==='object'?x.trainBonus:{},boosters:x.boosters&&typeof x.boosters==='object'?x.boosters:{},next:x.next&&typeof x.next==='object'?x.next:null};if(z.next)z.next.r=n(z.next.r,60,0,120);return z}catch(e){try{const raw=localStorage.getItem(KEY);if(raw)localStorage.setItem(KEY+'_corrupt_'+Date.now(),raw)}catch(_){}window.__badSave=true;return d}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){if(!window.__saveWarned){window.__saveWarned=true;setTimeout(()=>toast("⚠️ Не удалось сохранить прогресс"),0)}return false}}
+const $=s=>document.querySelector(s), clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), pick1=a=>a[Math.floor(Math.random()*a.length)];
+const lvlOf=id=>S.lvl[id]||1;
+function trainBonusOf(c){const b=S.trainBonus[c.id]||{};return Math.min(5,Object.values(b).reduce((s,v)=>s+v,0))}
+const ovrOf=c=>c.o+(lvlOf(c.id)-1)+trainBonusOf(c);
+function doUp(c){
+ const ml=maxLvlOf(c);
+ if(lvlOf(c.id)>=ml){toast(`Максимум для ${RN[rar(c.o)]}! ⭐`);return}
+ if(S.coins<upCost(c)){toast(`Не хватает монет! Нужно ${upCost(c)}💰`);return}
+ S.coins-=upCost(c);S.lvl[c.id]=lvlOf(c.id)+1;save();setCoins(true);
+ confetti(20);toast(`${c.n} → уровень ${lvlOf(c.id)}! ⬆️`);
+ checkAch();
+ if(tab==="coll")coll();
+ else if(tab==="squad"){closeM();squad();}
+ else if(tab==="match"){closeM();match();}
+}
+function skillsOf(c){
+ const out=[BASE_SKILL[c.p]];
+ if(lvlOf(c.id)>=3 && UNIQUE_SKILL[c.n]) out.push(UNIQUE_SKILL[c.n]);
+ if(lvlOf(c.id)>=5) out.push("captain");
+ return [...new Set(out)];
+}
+function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2300)}
+function setCoins(bump){const e=$("#coins");e.textContent="💰 "+S.coins;if(bump){e.classList.remove("bump");void e.offsetWidth;e.classList.add("bump")}}
+function confetti(n){for(let i=0;i<n;i++){const d=document.createElement("div");d.className="cf";d.textContent=pick1(["🎉","⭐","✨","⚽","🏆","💥"]);
+ d.style.left=Math.random()*100+"vw";d.style.animationDelay=Math.random()*.8+"s";document.body.appendChild(d);setTimeout(()=>d.remove(),3600)}}
+function screenFlash(){const d=document.createElement("div");d.className="sf";document.body.appendChild(d);setTimeout(()=>d.remove(),800)}
+function card(c){
+ const lv=lvlOf(c.id), ovr=ovrOf(c), stars=lv>1?"★".repeat(lv-1):"";
+ const tr=trainBonusOf(c);
+ return `<div class="card ${rar(c.o)} ${c.s?"son":""}">
+  <div class="ovr">${ovr}<small>${c.p}${stars?` <span class="lvlstars">${stars}</span>`:""}${tr?` <span class="lvlstars">+${tr}🏋️</span>`:""}</small></div>
+  <div class="face">${c.s?"👑":EM[c.p]}</div>
+  ${c.c?`<div class="club">${CLUB_LABEL}</div>`:""}
+  <div class="nm">${c.n}</div>
+  <div class="st">${c.st.map((v,i)=>`<span><b>${Math.min(99,v+(lv-1))}</b> ${LBL[i]}</span>`).join("")}</div>
+  <div class="skl">${skillsOf(c).map(s=>`<span title="${SKILLS[s].n}: ${SKILLS[s].d}">${SKILLS[s].e}</span>`).join("")}</div>
+ </div>`;
+}
+function lockedCard(c){return `<div class="card locked"><div class="face">${c.s?"🌟":"❓"}</div><div class="nm">${c.s?"СЕКРЕТ":"???"}</div><div style="font-size:12px">${RN[rar(c.o)]}</div></div>`}
+const TABS=[["shop","🛒 Магазин"],["squad","⚽ Состав"],["match","🏟️ Матч"],["cup","🏆 Кубок"],["train","🏋️ Тренировка"],["coll","📚 Коллекция"],["ach","🏆 Достижения"]];
+function go(t){if(busy||trainingOpen)return;clearMatchTimers();tab=t;pulled=null;nav();({shop,squad,match,cup,train,coll,ach})[t]()}
+function nav(){$("#nav").innerHTML=TABS.map(([k,n])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')">${n}</button>`).join("")}
+function clearMatchTimers(){matchTimers.forEach(t=>clearTimeout(t));matchTimers=[]}
+function currentSeason(){return Math.floor(new Date().getMonth()/4)+1}
+function seasonName(){return {1:"Легенды 2000-х",2:"Женский футбол",3:"Мемные и дворовые"}[currentSeason()]||"Базовый"}
+function seasonBar(){
+ const cs=currentSeason();
+ const got=DB.filter(c=>c.season===cs&&!c.s&&S.own[c.id]).length;
+ const total=DB.filter(c=>c.season===cs&&!c.s).length;
+ return `<div class="seasonbar">🗓️ Сезон: <b>${seasonName()}</b> · Собрано карт сезона: <b>${got}/${total}</b></div>`;
+}
+function checkAch(){
+ const newly=[];
+ ACHS.forEach(([id,icon,name,desc,target,reward,check])=>{
+  if(S.achDone[id])return;
+  try{if(check(S)){S.achDone[id]=true;S.coins+=reward;newly.push({id,icon,name,reward});}}catch(e){}
+ });
+ if(newly.length){
+  save();setCoins(true);
+  newly.forEach((a,i)=>setTimeout(()=>{toast(`${a.icon} Достижение: ${a.name}! +${a.reward}💰`);confetti(30)},i*600));
+  if(tab==="ach")ach();
+ }
+}
+function canDaily(){return S.daily!==new Date().toDateString()}
+function claimDaily(){
+ if(!canDaily()){toast("Бонус уже получен сегодня! Заходи завтра 😊");return}
+ const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+ const wasYesterday=S.daily===yesterday.toDateString();
+ const streak=wasYesterday?(S.streak||0)+1:1;
+ const reward=[200,300,400,500,700,1000,1500][Math.min(streak-1,6)];
+ S.coins+=reward;S.daily=new Date().toDateString();S.streak=streak;
+ if(streak>S.bestStreak)S.bestStreak=streak;
+ let bonusMsg=`🎁 День ${streak}: +${reward} 💰`;
+ if(streak>=7){S.coins+=1000;bonusMsg=`🔥 7 дней подряд! +${reward}💰 и бонус 1000💰`}
+ toast(bonusMsg);save();setCoins(true);confetti(40);checkAch();
+ setTimeout(()=>shop(),400);
+}
+function shop(){
+ const dailyBtn=canDaily()
+  ? `<div style="text-align:center;margin:10px 0"><button class="btn green big" onclick="claimDaily()">🎁 Ежедневный бонус · день ${(S.streak||0)+1}</button></div>`
+  : `<div style="text-align:center;margin:10px 0;color:#8fd;font-size:16px">🎁 Бонус получен! Серия: ${S.streak} дн. Заходи завтра</div>`;
+ $("#view").innerHTML=`<h2>Выбери пак и открой его! 🔥</h2>${seasonBar()}${dailyBtn}<div class="packs">${Object.entries(PACKS).map(([k,p])=>`<div class="pack ${k}"><div class="pk">${p.e}</div><h3>${p.name}</h3><p>${p.d}</p><button class="btn gold" onclick="openPack('${k}')">${p.price} 💰</button></div>`).join("")}</div><div id="reveal"></div>`;
+ if(pulled)showReveal();
+}
+function currentPool(){const cs=currentSeason();return DB.filter(c=>!c.s && (c.season===0 || c.season===cs))}
+function rollCard(P){
+ if(!P||!Array.isArray(P.w)||P.w.length!==5||P.w.some(v=>!Number.isFinite(v)||v<0)||P.w.reduce((a,b)=>a+b,0)<=0)return null;
+ if(!S.own[SON.id]&&Math.random()<clamp(P.son||0,0,1))return SON;
+ const w=P.w,total=w.reduce((a,b)=>a+b,0);let r=Math.random()*total,i=0;
+ for(;i<w.length-1;i++){if(r<w[i])break;r-=w[i]}
+ const k=["bronze","silver","gold","epic","icon"][i];
+ const pool=currentPool();
+ const open=pool.filter(c=>rar(c.o)===k && !S.own[c.id]);
+ const src=open.length?open:pool.filter(c=>rar(c.o)===k);
+ return src.length?pick1(src):null;
+}
+function openPack(k){sfx("pack");const P=PACKS[k];if(S.coins<P.price){toast("Не хватает монет! 💰 Сыграй матч, чтобы заработать");return}
+ S.coins-=P.price;pulled=[];
+ for(let i=0;i<P.n;i++){
+  const c=rollCard(P);
+  if(!c){console.warn("Пустой пул карт для",k);continue}
+  let dup=!!S.own[c.id],gain=0;
+  if(dup){gain=SELL[rar(c.o)];S.coins+=gain}else S.own[c.id]=1;
+  pulled.push({id:c.id,dup,gain});
+ }
+ S.stats.packs++;
+ let gotBooster=null;
+ if(Math.random()<BOOSTER_DROP){
+  const bkey=pick1(Object.keys(BOOSTERS));
+  S.boosters[bkey]=(S.boosters[bkey]||0)+1;
+  gotBooster=bkey;
+ }
+ save();setCoins(true);showReveal();$("#reveal").scrollIntoView({behavior:"smooth"});
+ if(gotBooster){setTimeout(()=>toast(`🎁 Выпал бустер: ${BOOSTERS[gotBooster].e} ${BOOSTERS[gotBooster].n}`),1200);confetti(15)}
+ checkAch();
+}
+function showReveal(){$("#reveal").innerHTML=`<h2>Нажимай на карты, чтобы открыть! 👆</h2><div class="row" style="margin-bottom:40px">${pulled.map((x,i)=>`<div class="flip" onclick="flip(this,${i})"><div class="flip-in"><div class="front"><span>⚽</span><b>FUT</b></div><div class="back">${card(DB[x.id])}${x.dup?`<div class="dup">ДУБЛЬ! продан +${x.gain} 💰</div>`:`<div class="new">НОВАЯ КАРТА! ✨</div>`}</div></div></div>`).join("")}</div><div style="text-align:center"><button class="btn" onclick="revealAll()">Открыть все</button></div>`}
+function flip(el,i){if(el.classList.contains("open"))return;el.classList.add("open","flash");setTimeout(()=>el.classList.remove("flash"),900);
+ const c=DB[pulled[i].id],r=rar(c.o);if(r==="icon"){screenFlash();confetti(c.s?120:60)}else if(r==="epic"){confetti(30)}else if(r==="gold"){confetti(18)}}
+function revealAll(){document.querySelectorAll(".flip:not(.open)").forEach((el,j)=>setTimeout(()=>el.click(),j*350))}
+function teamRate(){const f=S.lineup.map(id=>Number.isInteger(id)&&DB[id]?DB[id]:null).filter(Boolean);return f.length?f.reduce((a,c)=>a+ovrOf(c),0)/f.length:0}
+// ===== ПОЛЕ 7 СЛОТОВ: 3-2-1, без пересечений =====
+const XY=[[50,90],[18,65],[50,65],[82,65],[30,38],[70,38],[50,11]];
+function squad(){
+ const r=teamRate();
+ const skills={};
+ S.lineup.forEach(id=>{if(id==null)return;skillsOf(DB[id]).forEach(s=>skills[s]=(skills[s]||0)+1)});
+ const sklHtml=Object.keys(skills).length?`<div class="sklbox"><h3>🎖️ Навыки команды</h3>${Object.entries(skills).map(([s,n])=>`<div class="sklrow">${SKILLS[s].e} <b>${SKILLS[s].n}</b> ×${n} — ${SKILLS[s].d}</div>`).join("")}</div>`:"";
+ const bstEntries=Object.entries(S.boosters||{}).filter(([k,v])=>v>0);
+ const bstHtml=`<div class="bstbox"><h3>🎁 Бустеры (до 3 применятся в матче)</h3>${bstEntries.length?bstEntries.map(([k,v])=>`<div class="brow">${BOOSTERS[k].e} <b>${BOOSTERS[k].n}</b> ×${v} — ${BOOSTERS[k].d}</div>`).join(""):`<div class="brow">Нет бустеров. Открой паки!</div>`}</div>`;
+ $("#view").innerHTML=`<div class="teamr"><small>${TEAM_EMOJI} ${TEAM_NAME} · ОБЩИЙ РЕЙТИНГ</small><div class="big">${r?Math.round(r):"—"}</div></div><div class="field">${POS.map((p,i)=>{const id=S.lineup[i],c=id!=null?DB[id]:null;
+ return `<div class="slot" style="left:${XY[i][0]}%;top:${XY[i][1]}%" onclick="pick(${i})">${c?card(c):`<div class="empty">+<br>${p}</div>`}</div>`}).join("")}</div><p style="text-align:center;color:#8fd">Нажми на позицию, чтобы выбрать игрока или прокачать его</p>${sklHtml}${bstHtml}`;
+}
+function pick(i){
+ const pos=POS[i],used=S.lineup.filter((x,j)=>j!==i&&x!=null);
+ const list=DB.filter(c=>c.p===pos&&S.own[c.id]&&!used.includes(c.id)).sort((a,b)=>ovrOf(b)-ovrOf(a));
+ $("#mbox").innerHTML=`<h2>Выбери: ${pos} ${EM[pos]}</h2><div class="row">${list.map(c=>`
+  <div class="pickcell">
+   <div onclick="setP(${i},${c.id})">${card(c)}</div>
+   ${lvlOf(c.id)<maxLvlOf(c)?`<button class="btn sm" style="margin-top:6px" onclick="doUp(DB[${c.id}])">⬆️ ур.${lvlOf(c.id)+1} · ${upCost(c)}💰</button>`:`<div style="font-size:12px;color:#8fd;margin-top:6px">★ МАКС</div>`}
+  </div>`).join("")||"<p>Нет карточек на эту позицию. Открой паки! 🎁</p>"}</div>
+  <div style="text-align:center;margin-top:10px">${S.lineup[i]!=null?`<button class="btn" onclick="setP(${i},null)">Убрать игрока</button> `:""}<button class="btn gold" onclick="closeM()">Закрыть</button></div>`;
+ openM();
+}
+function setP(i,id){S.lineup[i]=id;save();closeM();squad()}
+let savedScrollY=0;function openM(){const m=$("#modal");if(m.style.display!=="flex"){savedScrollY=window.scrollY;document.body.style.top=`-${savedScrollY}px`;document.body.classList.add("modal-open")}m.style.display="flex"}function closeM(){if(penaltyOpen||trainingOpen)return;$("#modal").style.display="none";document.body.classList.remove("modal-open");document.body.style.top="";window.scrollTo(0,savedScrollY)}
+const TEAMS=["Красные Драконы 🐉","Синие Акулы 🦈","Золотые Орлы 🦅","Чёрные Пантеры 🐆","Огненные Львы 🦁","Ледяные Волки 🐺","Зелёные Ракеты 🚀","Ночные Совы 🦉"];
+const SURN=["Громов","Молниев","Тигров","Ветров","Огнев","Стрелков","Буревестников"];
+function newOpp(){
+ const D=DIVISIONS[S.div];
+ const t=pick1(TEAMS),i=t.lastIndexOf(" ");
+ const progress=D.req>0 && D.req<999 ? Math.min(1,S.divPoints/D.req) : 0.5;
+ const base=D.oppMin + (D.oppMax-D.oppMin)*progress;
+ S.next={n:t.slice(0,i),e:t.slice(i+1),r:clamp(Math.round(base+Math.random()*4-2),D.oppMin,D.oppMax)};
+ save();
+}
+function divBar(){
+ const D=DIVISIONS[S.div];
+ const isFinal=S.div>=DIVISIONS.length-1;
+ const pct=isFinal?100:Math.min(100,Math.round(S.divPoints/D.req*100));
+ const nextDiv=DIVISIONS[S.div+1];
+ let label,subline="";
+ if(isFinal){
+  label=`${D.em} Дивизион: <b>${D.name}</b> · ФИНАЛ! 🏆`;
+ }else{
+  label=`${D.em} Дивизион: <b>${D.name}</b> · Очков: <b>${S.divPoints}/${D.req}</b> · +${D.bonus}💰`;
+  subline=`<div class="next">Следующий: ${nextDiv.em} ${nextDiv.name} (нужно ${D.req} очков)</div>`;
+ }
+ return `<div style="text-align:center;margin:6px 0"><div class="divbar">${label}${subline}</div><div class="progress" style="max-width:400px;margin:6px auto"><div style="width:${pct}%"></div></div></div>`;
+}
+function vsHtml(){return `<div class="tm"><div class="em">${TEAM_EMOJI}</div><b>${TEAM_NAME}</b><div class="rt">${Math.round(teamRate())}</div></div><div class="vsx">VS</div><div class="tm"><div class="em">${S.next.e}</div><b>${S.next.n}</b><div class="rt">${S.next.r}</div></div>`}
+function tacticsHtml(){return `<div class="tactics">${Object.entries(TACTICS).map(([k,t])=>`<button class="btn ${k===tactic?'on':''}" onclick="setTactic('${k}')" title="${t.desc}">${t.name}</button>`).join("")}</div>`}
+
+const CUP_ROUNDS=[{n:'1/4 финала',r:64},{n:'Полуфинал',r:76},{n:'Финал',r:89}];
+function cup(){let c=S.cup||(S.cup={active:false,stage:0,trophies:0,freePacks:0});let h='<h2>🏆 Кубок самых-самых</h2><p style="text-align:center">Победитель получает 2500 монет, золотой пак и трофей.</p><div class="cup-grid">';for(let i=0;i<3;i++){h+='<div class="cup-step '+(c.active&&i===c.stage?'active':'')+'"><b>'+CUP_ROUNDS[i].n+'</b><br>'+(!c.active&&c.stage<3?'🔒':c.active&&i===c.stage?'▶ Текущий раунд':i<c.stage?'✅ Пройден':'🔒 Впереди')+'<small>Сила '+CUP_ROUNDS[i].r+'</small></div>'+(i<2?'<div class="cup-down">↓</div>':'')}h+='</div><p style="text-align:center">Трофеи: '+(c.trophies||0)+' 🏆</p><div style="text-align:center">'+(c.active?'<button class="btn green" onclick="playCupRound()">Играть раунд</button>':'<button class="btn green" onclick="startCup()">Начать кубок</button>')+(c.freePacks?'<button class="btn gold" onclick="claimCupPack()">Забрать золотой пак</button>':'')+'</div>';$('#view').innerHTML=h}
+function startCup(){S.cup={...(S.cup||{}),active:true,stage:0,matchPending:false};save();cup()}
+function playCupRound(){let c=S.cup;if(!c||!c.active)return;if(S.lineup.some(x=>x==null)){toast('Сначала собери состав из 7 игроков');return}c.matchPending=true;S.next={n:['Кубковые Волки','Кубковые Титаны','Финальные Легенды'][c.stage],e:['🐺','⚡','👑'][c.stage],r:CUP_ROUNDS[c.stage].r};save();tab='match';nav();match()}
+function recordCupResult(win){let c=S.cup;if(!c||!c.active||!c.matchPending)return;c.matchPending=false;if(!win){c.active=false;c.eliminated=true;S.coins+=150;toast('Кубок окончен: утешительный приз +150💰')}else if(++c.stage===3){c.active=false;c.trophies=(c.trophies||0)+1;c.freePacks=1;S.coins+=2500;confetti(90);sfx('win');toast('Кубок выигран! +2500💰, золотой пак и трофей')}save()}
+function claimCupPack(){if(!S.cup||!S.cup.freePacks)return;S.coins+=PACKS.gold.price;openPack('gold');S.coins-=PACKS.gold.price;S.cup.freePacks=0;save();setCoins(true);cup()}
+const SOUND_KEY='fut_mini_sound_v1';let soundOn=localStorage.getItem(SOUND_KEY)==='1',audioCtx=null;
+function toggleSound(){soundOn=!soundOn;try{localStorage.setItem(SOUND_KEY,soundOn?'1':'0')}catch(e){}$('#soundToggle').textContent=soundOn?'🔊':'🔇';if(soundOn)sfx('click')}
+function audioUnlock(){if(!soundOn)return;try{let C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!audioCtx)audioCtx=new C();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}
+function sfx(k){if(!soundOn)return;audioUnlock();if(!audioCtx)return;let a={click:[700,.05],pack:[440,.2],kick:[110,.12],miss:[170,.2],whistle:[1400,.35],goal:[520,.5],win:[390,.8]},p=a[k]||a.click,t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=k==='miss'?'sawtooth':'triangle';o.frequency.value=p[0];g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.1,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+p[1]);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+p[1])}
+document.addEventListener('pointerdown',audioUnlock);document.addEventListener('click',e=>{if(e.target.closest('button,.btn'))sfx('click')});
+
+function match(){if(!S.next)newOpp();
+ $("#view").innerHTML=`<h2>Следующий матч</h2>${divBar()}<div class="vs" id="vs">${vsHtml()}</div>${tacticsHtml()}<div class="score" id="score">0 : 0</div><div style="text-align:center"><button class="btn green big" id="play" onclick="play()">▶ Играть матч</button></div><div id="log"></div><div class="wins">🏆 Побед всего: ${S.wins}</div>`;
+}
+function setTactic(k){tactic=k;
+ document.querySelectorAll(".tactics .btn").forEach(b=>b.classList.remove("on"));
+ const idx=Object.keys(TACTICS).indexOf(k);
+ const btns=document.querySelectorAll(".tactics .btn");
+ if(btns[idx])btns[idx].classList.add("on");
+}
+function play(){
+ sfx("whistle");
+ if(S.lineup.some(x=>x==null)){toast("Сначала выставь всех 7 игроков в составе! ⚽");return}
+ busy=true;finished=false;clearMatchTimers();
+ const playBtn=$("#play");playBtn.disabled=true;
+ $("#log").innerHTML="";$("#score").textContent="0 : 0";
+ const skills=S.lineup.map(id=>skillsOf(DB[id])).flat();
+ const has=s=>skills.includes(s);
+ let dMod=0;
+ if(has("power")) dMod+=3;
+ if(has("captain")) dMod+=2;
+ let atkBonus=(has("sniper")?.08:0)+(has("maestro")?.05:0)+(has("poacher")?.05:0)+(has("engine")?.04:0)+(has("clutch")?.06:0);
+ let defBonus=(has("safe")?.15:0)+(has("wall")?.10:0)+(has("reflex")?.10:0)+(has("rock")?.08:0)+(has("tackle")?.06:0);
+ let luckBonus=0;
+ const usedBoosters=[];
+ if(S.boosters){
+  for(const k of Object.keys(S.boosters)){
+   while(S.boosters[k]>0 && usedBoosters.length<3){usedBoosters.push(k);S.boosters[k]--;}
+   if(usedBoosters.length>=3)break;
+  }
+ }
+ for(const b of usedBoosters){
+  if(b==="strike") dMod+=2;
+  else if(b==="shield") defBonus+=.15;
+  else if(b==="luck") luckBonus+=100;
+  else if(b==="speed") dMod+=1;
+  else if(b==="pass") dMod+=1;
+  else if(b==="motivation") dMod+=5;
+ }
+ save();
+ const info=document.createElement("div");
+ info.className="ln";info.textContent=`Тактика: ${TACTICS[tactic].name} — ${TACTICS[tactic].desc}`;
+ $("#log").appendChild(info);
+ if(usedBoosters.length){
+  const bl=document.createElement("div");bl.className="ln";
+  bl.textContent="🎁 Бустеры: "+usedBoosters.map(b=>BOOSTERS[b].e+" "+BOOSTERS[b].n).join(", ");
+  $("#log").appendChild(bl);
+ }
+ const L=S.lineup.map(i=>DB[i]),gk=L[0],op=S.next;
+ const d=teamRate()-op.r + TACTICS[tactic].mod + dMod;
+ let a=0,b=0;
+ const n=Math.random()<.5?3:4,ms=new Set();while(ms.size<n)ms.add(5+Math.floor(Math.random()*84));
+ const ev=[{t:"0' — Свисток! Матч начался! 🎺",c:""}];
+ [...ms].sort((x,y)=>x-y).forEach(m=>{
+  if(Math.random()<clamp(.5+d*.02,.25,.75)){
+   const r=Math.random(); let w;
+   if(r<.5) w=L[6];
+   else if(r<.8) w=L[4+Math.floor(Math.random()*2)];
+   else w=L[1+Math.floor(Math.random()*3)];
+   if(Math.random()<clamp(.5+d*.02+atkBonus,.25,.88)){a++;ev.push({t:`${m}' — ${pick1([`${w.n} бьёт в девятку! ГООООЛ! ⚽🔥`,`${w.n} обыгрывает защитника и забивает! ГОЛ! 🎉`,`Дальний удар от ${w.n}... В сетке! ГООООЛ! 🚀`,`Идеальный пас и ${w.n} добивает мяч! ГОЛ! 💥`])}`,c:"g",s:[a,b]})}
+   else ev.push({t:`${m}' — ${pick1([`${w.n} бьёт... но вратарь соперника творит чудо! 🧤`,`${w.n} бьёт мимо ворот! Мяч улетел на трибуны 😬`,`Штанга! ${w.n} чуть-чуть не забил! 😱`])}`,c:""})
+  }else{
+   const o=pick1(SURN);
+   if(Math.random()<clamp(.5-d*.02-defBonus,.15,.8)){b++;ev.push({t:`${m}' — ${o} из «${op.n}» пробивает ${gk.n}... Гол в наши ворота! 😱`,c:"b",s:[a,b]})}
+   else ev.push({t:`${m}' — ${o} бьёт, но ${gk.n} спасает команду! Какой сейв! 🧤👏`,c:""})
+  }});
+ ev.push({t:`90' — Финальный свисток! Счёт ${a}:${b}`,c:""});
+ const skipBtn=document.createElement("button");
+ skipBtn.className="btn";skipBtn.textContent="⏩ Пропустить";skipBtn.style.marginLeft="8px";
+ skipBtn.onclick=()=>{clearMatchTimers();
+  if(a===b)penaltyShootout().then(r=>finish(r.win?1:0,r.win?0:1,luckBonus));
+  else finish(a,b,luckBonus);
+ };
+ playBtn.after(skipBtn);
+ ev.forEach((e,i)=>{
+  const t=setTimeout(()=>{
+   const l=document.createElement("div");l.className="ln "+e.c;l.textContent=e.t;$("#log").appendChild(l);if(e.s)sfx(e.c==="g"?"goal":"miss");else if(/бьёт|удар|штанг/i.test(e.t))sfx("kick");if(/Свисток/.test(e.t))sfx("whistle");
+   if(e.s){$("#score").textContent=e.s[0]+" : "+e.s[1];if(e.c==="g")confetti(10)}if(/Штанга|мимо|спасает/.test(e.t))sfx("miss");else if(/бьёт|удар|пробивает/.test(e.t))sfx("kick");
+   if(i===ev.length-1){
+    if(a===b){setTimeout(()=>penaltyShootout().then(r=>finish(r.win?1:0,r.win?0:1,luckBonus)),600)}
+    else finish(a,b,luckBonus);
+   }
+  },i*1400);
+  matchTimers.push(t);
+ });
+}
+function penaltyShootout(){
+ return new Promise(resolve=>{
+  penaltyOpen=true;
+  let pScore=0,aiScore=0,round=0;
+  const dirs=["⬅️","⬆️","➡️"];
+  function render(){
+   $("#mbox").innerHTML=`<h2>🥅 Серия пенальти!</h2>
+    <div class="pen">
+     <div class="stat">Ты: <b>${pScore}</b> · Соперник: <b>${aiScore}</b></div>
+     <p>Раунд ${round+1} из 3. Куда бьём?</p>
+     <div class="dirs">${dirs.map((d,i)=>`<button class="btn big" onclick="window.__pen(${i})">${d}</button>`).join("")}</div>
+    </div>`;
+   $("#modal").style.display="flex";
+  }
+  window.__pen=(dir)=>{
+   const aiDir=Math.floor(Math.random()*3);
+   if(dir!==aiDir)pScore++;
+   if(Math.random()<.5)aiScore++;
+   round++;
+   if(round<3)render();
+   else{
+    penaltyOpen=false;closeM();
+    const win=pScore>aiScore;
+    if(win)S.stats.penWins++;
+    save();toast(win?"🏆 Победа по пенальти!":"😤 Поражение по пенальти");
+    resolve({a:pScore,b:aiScore,win});
+   }
+  };
+  render();
+ });
+}
+function finish(a,b,luckBonus){
+ if(finished)return;finished=true;
+ clearMatchTimers();
+ const win=a>b, isDraw=a===b, base=win?250:isDraw?120:60;
+ const divMult=1 + S.div*0.12;
+ const lucky=S.lineup.some(id=>id!=null&&skillsOf(DB[id]).includes("lucky"));
+ const gain=Math.round(base*TACTICS[tactic].reward*divMult)+(lucky?50:0)+(luckBonus||0);
+ S.coins+=gain;
+ S.stats.matches++;S.stats.goals+=a;
+ if(win){S.stats.wins++;}
+ // ===== ОЧКИ ДИВИЗИОНА: победа +3, ничья +1 =====
+ if(win){S.wins++;S.divPoints+=3;}
+ else if(isDraw){S.divPoints+=1;}
+ // проверка повышения
+ const D=DIVISIONS[S.div];
+ if(S.divPoints>=D.req && S.div<DIVISIONS.length-1){
+  S.div++;S.divPoints=0;S.coins+=D.bonus;
+  setTimeout(()=>{toast(`🏆 Повышение! Дивизион «${DIVISIONS[S.div].name}» +${D.bonus}💰`);confetti(80)},800);
+ }
+ if(win){
+  S._winStreak=(S._winStreak||0)+1;
+  if(S._winStreak>S.bestStreak)S.bestStreak=S._winStreak;
+ }else S._winStreak=0;
+ newOpp();recordCupResult(win);save();setCoins(true);checkAch();
+ const l=document.createElement("div");l.className="ln r";
+ const ptsLabel=win?"+3 очк.":isDraw?"+1 очк.":"+0 очк.";
+ l.textContent=(win?"🏆 ПОБЕДА! ":isDraw?"🤝 НИЧЬЯ! ":"😤 ПОРАЖЕНИЕ! ")+`+${gain} 💰 · ${ptsLabel}`+(lucky?" 🍀":"")+(luckBonus?" 🎁":"");$("#log").appendChild(l);
+ if(win)confetti(90);
+ const vs=$("#vs");if(vs)vs.innerHTML=vsHtml();
+ const db=document.querySelector(".divbar");if(db)db.parentElement.outerHTML=divBar();
+ document.querySelectorAll("#view .btn").forEach(b=>{if(b.textContent.includes("Пропустить"))b.remove()});
+ const playBtn=$("#play");if(playBtn){playBtn.disabled=false;playBtn.textContent="▶ Играть ещё"}
+ busy=false;
+}
+function train(){
+ const today=new Date().toDateString();if(S.trainToday!==today){S.trainToday=today;S.trainUsed=0;save()}
+ trainingOpen=false;
+ $("#view").innerHTML=`<h2>🏋️ Тренировка</h2>
+ <p style="text-align:center;color:#8fd;margin-bottom:6px">Успешная мини-игра даёт карте <b>+1 к характеристике</b> (макс +5). 3 успешных тренировки в день.</p>
+ <p style="text-align:center;color:#ffd93b;font-weight:900">Сегодня: ${(S.trainUsed||0)} / 3</p>
+ <div class="train">
+  <h3 style="text-align:center;margin:10px 0">Выбери тип тренировки:</h3>
+  <div class="trow">
+   <div class="tcard"><div class="ic">🥅</div><h3>Пенальти</h3><p>3 удара по движущейся мишени. Точность решает.</p><button class="btn ${(S.trainUsed||0)<3?'green':''}" ${(S.trainUsed||0)>=3?'disabled':''} onclick="startTrain('pen')">Играть</button></div>
+   <div class="tcard"><div class="ic">🏃</div><h3>Дриблинг</h3><p>Повтори последовательность стрелок. Ритм решает.</p><button class="btn ${(S.trainUsed||0)<3?'green':''}" ${(S.trainUsed||0)>=3?'disabled':''} onclick="startTrain('drib')">Играть</button></div>
+   <div class="tcard"><div class="ic">🧤</div><h3>Сейв</h3><p>Угадай, куда полетит мяч. Реакция решает.</p><button class="btn ${(S.trainUsed||0)<3?'green':''}" ${(S.trainUsed||0)>=3?'disabled':''} onclick="startTrain('save')">Играть</button></div>
+  </div>
+  <h3 style="text-align:center;margin:14px 0">Выбери карту для тренировки:</h3>
+  <div class="row">${S.lineup.filter(id=>id!=null).map(id=>`<div class="pickcell"><div onclick="selectTrainCard(${id})">${card(DB[id])}</div>${trainBonusOf(DB[id])>=5?'<div style="font-size:12px;color:#8fd">★ МАКС тренировок</div>':''}</div>`).join("")}</div>
+ </div>`;
+}
+function selectTrainCard(id){
+ const c=DB[id];
+ if(trainBonusOf(c)>=5){toast("Эта карта уже прокачана тренировками! ★");return}
+ if((S.trainUsed||0)>=3){toast("На сегодня лимит тренировок исчерпан! Заходи завтра");return}
+ window.__trainCard=c;
+ toast(`Выбрана карта: ${c.n}. Теперь жми тип тренировки!`);
+}
+function startTrain(kind){
+ if((S.trainUsed||0)>=3){toast("На сегодня лимит тренировок исчерпан!");return}
+ if(!window.__trainCard){toast("Сначала выбери карту внизу!");return}
+ const c=window.__trainCard;
+ if(trainBonusOf(c)>=5){toast("Эта карта уже прокачана тренировками!");return}
+ trainingOpen=true;
+ if(kind==="pen") trainPen(c);
+ else if(kind==="drib") trainDrib(c);
+ else trainSave(c);
+}
+function trainSuccess(c){
+ const b=S.trainBonus[c.id]||{};
+ const cur=trainBonusOf(c);
+ if(cur>=5){toast("Карта уже прокачана!");return}
+ let idx=Math.floor(Math.random()*4);
+ b[idx]=(b[idx]||0)+1;
+ S.trainBonus[c.id]=b;
+ S.trainUsed=(S.trainUsed||0)+1;
+ S.trainToday=new Date().toDateString();
+ S.stats.trainOk++;
+ save();checkAch();
+ toast(`✅ Успех! ${c.n}: ${LBL[idx]} +1 🏋️`);
+ confetti(20);
+ setTimeout(()=>{trainingOpen=false;train()},600);
+}
+function trainFail(c){
+ S.trainUsed=(S.trainUsed||0)+1;
+ S.trainToday=new Date().toDateString();
+ save();
+ toast(`❌ Неудача. Попытка потрачена.`);
+ setTimeout(()=>{trainingOpen=false;train()},600);
+}
+function trainPen(c){
+ let attempts=0,hits=0,timer=null,token=0;
+ function step(){const id=++token,pos=15+Math.random()*70,y=15+Math.random()*55;
+  $("#mbox").innerHTML="<h2>🥅 Пенальти: "+c.n+"</h2><div class=\'mg\'><div class=\'hint\'>Удар "+(attempts+1)+"/3. Попади в 🎯</div><div class=\'stage\'><div class=\'goal\'></div><div class=\'target\' style=\'left:"+pos+"%;top:"+y+"%;transform:translate(-50%,-50%)\' onclick=\'window.__penHit(true,"+id+")\'>🎯</div></div></div>";openM();
+  window.__penHit=(hit,t)=>{if(t!==token||attempts>=3)return;clearTimeout(timer);if(hit)hits++;attempts++;if(attempts<3)timer=setTimeout(step,350);else done()};
+  timer=setTimeout(()=>{if(id!==token||attempts>=3)return;attempts++;if(attempts<3)step();else done()},2500)}
+ function done(){clearTimeout(timer);token++;trainingOpen=false;closeM();if(hits>=2)trainSuccess(c);else trainFail(c)}
+ step()
+}
+function trainDrib(c){
+ let seq=[],input=[],started=false;
+ function gen(){seq=[];for(let i=0;i<5;i++)seq.push(Math.floor(Math.random()*4));}
+ const arrows=["⬅️","⬆️","➡️","⬇️"];
+ function render(){
+  const seqHtml=seq.map((v,i)=>{
+   if(i<input.length) return `<span class="hit">${arrows[v]}</span>`;
+   if(i===input.length) return `<span class="cur">${arrows[v]}</span>`;
+   return `<span style="opacity:.3">${arrows[v]}</span>`;
+  }).join("");
+  $("#mbox").innerHTML=`<h2>🏃 Дриблинг: ${c.n}</h2>
+   <div class="mg">
+    <div class="hint">Повтори последовательность</div>
+    <div class="seq">${seqHtml}</div>
+    <div style="margin-top:10px">${arrows.map((a,i)=>`<div class="arrow" onclick="window.__dr(${i})">${a}</div>`).join("")}</div>
+    <div style="margin-top:10px;color:#8fd">${input.length}/${seq.length}</div>
+   </div>`;
+  $("#modal").style.display="flex";
+ }
+ window.__dr=(i)=>{
+  if(!started){started=true}
+  if(i===seq[input.length]){input.push(i);render();if(input.length===seq.length){closeM();trainingOpen=false;trainSuccess(c)}}
+  else{closeM();trainingOpen=false;trainFail(c)}
+ };
+ gen();render();
+}
+function trainSave(c){
+ let rounds=0,hits=0;
+ function step(){
+  $("#mbox").innerHTML=`<h2>🧤 Сейв: ${c.n}</h2>
+   <div class="mg">
+    <div class="hint">Раунд ${rounds+1}/3. Угадай направление</div>
+    <div class="stage" id="stage">
+     <div class="goal"></div>
+     <div style="position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);font-size:40px">⚽</div>
+     <div style="position:absolute;left:50%;top:85%;transform:translate(-50%,-50%);font-size:36px">🧤</div>
+    </div>
+    <div style="margin-top:10px">${["⬅️","⬆️","➡️"].map((d,i)=>`<button class="btn big" onclick="window.__sv(${i})">${d}</button>`).join("")}</div>
+   </div>`;
+  $("#modal").style.display="flex";
+  window.__sv=(i)=>{
+   const truth=Math.floor(Math.random()*3);
+   if(i===truth)hits++;
+   rounds++;
+   if(rounds<3)setTimeout(step,300);
+   else{closeM();trainingOpen=false;if(hits>=2)trainSuccess(c); else trainFail(c)}
+  };
+ }
+ step();
+}
+function coll(){
+ const all=[...DB].sort((x,y)=>ovrOf(y)-ovrOf(x)),have=all.filter(c=>S.own[c.id]).length;
+ const byRar={};
+ all.forEach(c=>{const r=rar(c.o);byRar[r]=byRar[r]||{t:0,h:0};byRar[r].t++;if(S.own[c.id])byRar[r].h++});
+ $("#view").innerHTML=`<h2>Собрано: ${have} из ${DB.length}</h2>
+  ${seasonBar()}
+  <div class="row" style="margin-bottom:10px;font-size:15px;color:#8fd">
+   ${Object.entries(byRar).map(([r,v])=>`<span>${RN[r]}: ${v.h}/${v.t}</span>`).join(" · ")}
+  </div>
+  <div class="row">${all.map(c=>S.own[c.id]?card(c):lockedCard(c)).join("")}</div>`;
+}
+function ach(){
+ const items=ACHS.map(([id,icon,name,desc,target,reward,check])=>{
+  const done=!!S.achDone[id];
+  let prog=0;
+  try{prog=check(S)?target:Math.min(target,getProg(id,S))}catch(e){}
+  const pct=Math.min(100,Math.round(prog/target*100));
+  return `<div class="aitem ${done?"done":""}">
+   <div class="icon">${icon}</div>
+   <div class="info"><b>${name}</b><div class="desc">${desc}</div>
+    ${!done?`<div class="prog"><div style="width:${pct}%"></div></div>`:""}
+   </div>
+   <div class="rw">${done?"✅":`+${reward}💰`}</div>
+  </div>`;
+ }).join("");
+ $("#view").innerHTML=`<h2>🏆 Достижения</h2><div class="ach">${items}</div>`;
+}
+function getProg(id,S){
+ switch(id){
+  case "first_goal":case "goal_10":case "goal_50":return S.stats.goals;
+  case "win_3":return S.bestStreak;
+  case "win_10":return S.stats.wins;
+  case "div_2":return Math.min(S.div,1);
+  case "div_5":return Math.min(S.div,6);
+  case "div_8":return Math.min(S.div,7);
+  case "pen_win":return S.stats.penWins;
+  case "collect_30":case "collect_80":case "collect_130":return DB.filter(c=>S.own[c.id]).length;
+  case "up_5":return Object.values(S.lvl).some(v=>v>=5)?1:0;
+  case "epic_10":return DB.filter(c=>!c.s&&rar(c.o)==="epic"&&S.own[c.id]).length;
+  case "daily_7":return S.streak;
+  case "pack_10":return S.stats.packs;
+  case "season_1":return seasonCollected(S);
+  case "train_3":case "train_10":return S.stats.trainOk;
+ }
+ return 0;
+}
+function resetAll(){if(confirm("Точно начать заново? Все монеты и карточки пропадут!")){clearMatchTimers();trainingOpen=false;S=fresh();save();go("shop");setCoins()}}
+setCoins();nav();shop();if(document.querySelector("#soundToggle"))document.querySelector("#soundToggle").textContent=soundOn?"🔊":"🔇";if(document.querySelector("#soundToggle"))document.querySelector("#soundToggle").textContent=soundOn?"🔊":"🔇";
+</script>
+</body></html>
