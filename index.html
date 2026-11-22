@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>FUT Мини ⚽</title><link rel="stylesheet" href="css/style.css"></head><body>
+<header><h1>⚽ FUT МИНИ</h1><button id="soundToggle" class="btn sm" onclick="toggleSound()">🔇</button><div class="coins" id="coins"></div></header>
+<nav id="nav"></nav>
+<div id="view"></div>
+<footer><button onclick="resetAll()">Начать игру заново</button></footer>
+<div id="modal" class="modal" style="display:none" onclick="if(event.target===this)closeM()"><div id="mbox"></div></div>
+<script defer src="js/data.js"></script><script defer src="js/state.js"></script><script defer src="js/audio.js"></script><script defer src="js/ui.js"></script><script defer src="js/match2d.js"></script></body></html>
