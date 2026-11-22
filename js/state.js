@@ -1,6 +1,6 @@
 function seasonCollected(s){return DB.filter(c=>c.season===currentSeason()&&!c.s&&s.own[c.id]).length}
 const KEY="fut_mini_v1";
-let S=load(), tab="shop", pulled=null, busy=false; if(window.__badSave)setTimeout(()=>toast("⚠️ Сохранение повреждено, повреждённая копия сохранена отдельно"),0);
+let S=null, tab="shop", pulled=null, busy=false;
 let tactic="balance", finished=false, matchTimers=[], penaltyOpen=false, trainingOpen=false;
 function fresh(){
  const st=[

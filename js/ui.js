@@ -156,18 +156,6 @@ function startCup(){S.cup={...(S.cup||{}),active:true,stage:0,matchPending:false
 function playCupRound(){let c=S.cup;if(!c||!c.active)return;if(S.lineup.some(x=>x==null)){toast('Сначала собери состав из 7 игроков');return}c.matchPending=true;S.next={n:['Кубковые Волки','Кубковые Титаны','Финальные Легенды'][c.stage],e:['🐺','⚡','👑'][c.stage],r:CUP_ROUNDS[c.stage].r};save();tab='match';nav();match()}
 function recordCupResult(win){let c=S.cup;if(!c||!c.active||!c.matchPending)return;c.matchPending=false;if(!win){c.active=false;c.eliminated=true;S.coins+=150;toast('Кубок окончен: утешительный приз +150💰')}else if(++c.stage===3){c.active=false;c.trophies=(c.trophies||0)+1;c.freePacks=1;S.coins+=2500;confetti(90);sfx('win');toast('Кубок выигран! +2500💰, золотой пак и трофей')}save()}
 function claimCupPack(){if(!S.cup||!S.cup.freePacks)return;S.coins+=PACKS.gold.price;openPack('gold');S.coins-=PACKS.gold.price;S.cup.freePacks=0;save();setCoins(true);cup()}
-const SOUND_KEY='fut_mini_sound_v1';let soundOn=localStorage.getItem(SOUND_KEY)==='1',audioCtx=null;
-function toggleSound(){soundOn=!soundOn;try{localStorage.setItem(SOUND_KEY,soundOn?'1':'0')}catch(e){}$('#soundToggle').textContent=soundOn?'🔊':'🔇';if(soundOn)sfx('click')}
-function audioUnlock(){if(!soundOn)return;try{let C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!audioCtx)audioCtx=new C();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}
-function sfx(k){if(!soundOn)return;audioUnlock();if(!audioCtx)return;let a={click:[700,.05],pack:[440,.2],kick:[110,.12],miss:[170,.2],whistle:[1400,.35],goal:[520,.5],win:[390,.8]},p=a[k]||a.click,t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=k==='miss'?'sawtooth':'triangle';o.frequency.value=p[0];g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.1,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+p[1]);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+p[1])}
-document.addEventListener('pointerdown',audioUnlock);document.addEventListener('click',e=>{if(e.target.closest('button,.btn'))sfx('click')});
-
-const CUP_ROUNDS=[{n:'1/4 финала',r:64},{n:'Полуфинал',r:76},{n:'Финал',r:89}];
-function cup(){let c=S.cup||(S.cup={active:false,stage:0,trophies:0,freePacks:0});let h='<h2>🏆 Кубок самых-самых</h2><p style="text-align:center">Победитель получает 2500 монет, золотой пак и трофей.</p><div class="cup-grid">';for(let i=0;i<3;i++){h+='<div class="cup-step '+(c.active&&i===c.stage?'active':'')+'"><b>'+CUP_ROUNDS[i].n+'</b><br>'+(!c.active&&c.stage<3?'🔒':c.active&&i===c.stage?'▶ Текущий раунд':i<c.stage?'✅ Пройден':'🔒 Впереди')+'<small>Сила '+CUP_ROUNDS[i].r+'</small></div>'+(i<2?'<div class="cup-down">↓</div>':'')}h+='</div><p style="text-align:center">Трофеи: '+(c.trophies||0)+' 🏆</p><div style="text-align:center">'+(c.active?'<button class="btn green" onclick="playCupRound()">Играть раунд</button>':'<button class="btn green" onclick="startCup()">Начать кубок</button>')+(c.freePacks?'<button class="btn gold" onclick="claimCupPack()">Забрать золотой пак</button>':'')+'</div>';$('#view').innerHTML=h}
-function startCup(){S.cup={...(S.cup||{}),active:true,stage:0,matchPending:false};save();cup()}
-function playCupRound(){let c=S.cup;if(!c||!c.active)return;if(S.lineup.some(x=>x==null)){toast('Сначала собери состав из 7 игроков');return}c.matchPending=true;S.next={n:['Кубковые Волки','Кубковые Титаны','Финальные Легенды'][c.stage],e:['🐺','⚡','👑'][c.stage],r:CUP_ROUNDS[c.stage].r};save();tab='match';nav();match()}
-function recordCupResult(win){let c=S.cup;if(!c||!c.active||!c.matchPending)return;c.matchPending=false;if(!win){c.active=false;c.eliminated=true;S.coins+=150;toast('Кубок окончен: утешительный приз +150💰')}else if(++c.stage===3){c.active=false;c.trophies=(c.trophies||0)+1;c.freePacks=1;S.coins+=2500;confetti(90);sfx('win');toast('Кубок выигран! +2500💰, золотой пак и трофей')}save()}
-function claimCupPack(){if(!S.cup||!S.cup.freePacks)return;S.coins+=PACKS.gold.price;openPack('gold');S.coins-=PACKS.gold.price;S.cup.freePacks=0;save();setCoins(true);cup()}
 function setTactic(k){tactic=k;
  document.querySelectorAll(".tactics .btn").forEach(b=>b.classList.remove("on"));
  const idx=Object.keys(TACTICS).indexOf(k);
@@ -400,6 +388,7 @@ function getProg(id,S){
  }
  return 0;
 }
-
 function resetAll(){if(confirm("Точно начать заново? Все монеты и карточки пропадут!")){clearMatchTimers();trainingOpen=false;S=fresh();save();go("shop");setCoins()}}
-setCoins();nav();shop();if(document.querySelector("#soundToggle"))document.querySelector("#soundToggle").textContent=soundOn?"🔊":"🔇";if(document.querySelector("#soundToggle"))document.querySelector("#soundToggle").textContent=soundOn?"🔊":"🔇";
+
+// Boot the menu independently of the optional match engine. All classic scripts are loaded in document order.
+document.addEventListener("DOMContentLoaded",function(){try{S=load();setCoins();nav();shop();const soundButton=document.querySelector("#soundToggle");if(soundButton)soundButton.textContent=soundOn?"🔊":"🔇";if(window.__badSave)toast("⚠️ Сохранение повреждено; исходная копия сохранена отдельно")}catch(error){console.error("FUT Mini startup failed",error);const view=document.querySelector("#view");if(view)view.textContent="Не удалось запустить игру. Обновите страницу или проверьте файлы JavaScript."}},{once:true});
