@@ -1,3 +1,48 @@
+const COACH_CONTRACTS={
+ passes:{name:"Распасовщик",task:"Отдай 4 точных паса",target:4,reward:150},
+ tackles:{name:"Цепкий отбор",task:"Сделай 2 перехвата",target:2,reward:180},
+ goals:{name:"Атакующий порыв",task:"Забей 2 гола",target:2,reward:200},
+ key:{name:"Хладнокровие",task:"Забей в ключевом моменте",target:1,reward:220}
+};
+let contractChoices=[], selectedContract=null;
+
+function offerContracts(){
+ const choices=Object.keys(COACH_CONTRACTS);
+ const first=choices.splice(Math.floor(Math.random()*choices.length),1)[0];
+ contractChoices=[first,pick1(choices)];
+ selectedContract=first;
+ const panel=$("#contractPanel");
+ if(!panel)return;
+ panel.innerHTML='<strong>📋 Выбери контракт тренера</strong><div class="contract-choices"></div>';
+ const list=panel.querySelector(".contract-choices");
+ for(const key of contractChoices){
+  const contract=COACH_CONTRACTS[key];
+  const button=document.createElement("button");
+  button.type="button";
+  button.setAttribute("aria-pressed",String(key===first));
+  button.innerHTML="<b>"+contract.name+"</b><span>"+contract.task+"</span><strong>+"+contract.reward+" 💰</strong>";
+  button.onclick=()=>{
+   if(busy)return;
+   selectedContract=key;
+   for(const item of list.children)item.setAttribute("aria-pressed",String(item===button));
+  };
+  list.appendChild(button);
+ }
+}
+function showContractProgress(m){
+ const panel=$("#contractPanel");
+ if(!panel)return;
+ const complete=m.contractDone>=m.contractTarget;
+ panel.innerHTML='<div class="contract-progress" role="status"></div>';
+ const progress=panel.firstElementChild;
+ progress.classList.toggle("complete",complete);
+ progress.textContent=(complete?"✅ ":"📋 ")+COACH_CONTRACTS[m.contractKey].task+" · "+m.contractDone+"/"+m.contractTarget;
+}
+function advanceContract(m,key){
+ if(m.contractKey!==key || m.contractDone>=m.contractTarget)return;
+ m.contractDone++;
+ showContractProgress(m);
+}
 function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2300)}
 function setCoins(bump){const e=$("#coins");e.textContent="💰 "+S.coins;if(bump){e.classList.remove("bump");void e.offsetWidth;e.classList.add("bump")}}
 function confetti(n){for(let i=0;i<n;i++){const d=document.createElement("div");d.className="cf";d.textContent=pick1(["🎉","⭐","✨","⚽","🏆","💥"]);
@@ -17,7 +62,7 @@ function card(c){
 }
 function lockedCard(c){return `<div class="card locked"><div class="face">${c.s?"🌟":"❓"}</div><div class="nm">${c.s?"СЕКРЕТ":"???"}</div><div style="font-size:12px">${RN[rar(c.o)]}</div></div>`}
 const TABS=[["shop","🛒 Магазин"],["squad","⚽ Состав"],["match","🏟️ Матч"],["cup","🏆 Кубок"],["train","🏋️ Тренировка"],["coll","📚 Коллекция"],["ach","🏆 Достижения"]];
-function go(t){if(busy||trainingOpen)return;clearMatchTimers();tab=t;pulled=null;nav();({shop,squad,match,cup,train,coll,ach})[t]()}
+function go(t){if(busy||trainingOpen)return;if(typeof stopMatch2d==="function")stopMatch2d();tab=t;pulled=null;nav();({shop,squad,match,cup,train,coll,ach})[t]()}
 function nav(){$("#nav").innerHTML=TABS.map(([k,n])=>`<button class="${k===tab?"on":""}" onclick="go('${k}')">${n}</button>`).join("")}
 function clearMatchTimers(){matchTimers.forEach(t=>clearTimeout(t));matchTimers=[]}
 function currentSeason(){return Math.floor(new Date().getMonth()/4)+1}
@@ -41,23 +86,37 @@ function checkAch(){
  }
 }
 function canDaily(){return S.daily!==new Date().toDateString()}
+const DAILY_REWARDS=[200,300,400,500,700,1000,1500];
 function claimDaily(){
  if(!canDaily()){toast("Бонус уже получен сегодня! Заходи завтра 😊");return}
- const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
- const wasYesterday=S.daily===yesterday.toDateString();
- const streak=wasYesterday?(S.streak||0)+1:1;
- const reward=[200,300,400,500,700,1000,1500][Math.min(streak-1,6)];
- S.coins+=reward;S.daily=new Date().toDateString();S.streak=streak;
- if(streak>S.bestStreak)S.bestStreak=streak;
- let bonusMsg=`🎁 День ${streak}: +${reward} 💰`;
- if(streak>=7){S.coins+=1000;bonusMsg=`🔥 7 дней подряд! +${reward}💰 и бонус 1000💰`}
- toast(bonusMsg);save();setCoins(true);confetti(40);checkAch();
- setTimeout(()=>shop(),400);
+ const day=Math.min(DAILY_REWARDS.length,S.dailyDays+1);
+ const reward=DAILY_REWARDS[day-1], finalDay=day===DAILY_REWARDS.length;
+ const previous=S;
+ S={...S,own:{...S.own},stats:{...S.stats},boosters:{...S.boosters}};
+ S.coins+=reward;
+ S.daily=new Date().toDateString();
+ S.dailyDays=finalDay?0:day;
+ if(finalDay)S.dailyCycleCompleted=true;
+ const pack=finalDay?grantPack("gold"):null;
+ if(!save()){
+  S=previous;
+  return;
+ }
+ shop();
+ toast("🎁 День "+day+" · +"+reward+" 💰"+(pack?" и золотой пак":""));
+ confetti(40);
+ if(pack)revealGrantedPack(pack);
+ else{setCoins(true);checkAch()}
 }
 function shop(){
- const dailyBtn=canDaily()
-  ? `<div style="text-align:center;margin:10px 0"><button class="btn green big" onclick="claimDaily()">🎁 Ежедневный бонус · день ${(S.streak||0)+1}</button></div>`
-  : `<div style="text-align:center;margin:10px 0;color:#8fd;font-size:16px">🎁 Бонус получен! Серия: ${S.streak} дн. Заходи завтра</div>`;
+ const day=Math.min(DAILY_REWARDS.length,S.dailyDays+1);
+ const marks=DAILY_REWARDS.map((_,i)=>i<S.dailyDays?"✅":"⬜").join(" ");
+ const dailyBtn=`<div style="text-align:center;margin:10px 0">
+  <div aria-label="Отметок ${S.dailyDays} из 7">${marks}</div>
+  ${canDaily()
+   ? `<button class="btn green big" onclick="claimDaily()">🎁 День ${day} из 7 · +${DAILY_REWARDS[day-1]} 💰${day===7?" и золотой пак":""}</button>`
+   : "🎁 Бонус получен. Следующая отметка завтра."}
+ </div>`;
  $("#view").innerHTML=`<h2>Выбери пак и открой его! 🔥</h2>${seasonBar()}${dailyBtn}<div class="packs">${Object.entries(PACKS).map(([k,p])=>`<div class="pack ${k}"><div class="pk">${p.e}</div><h3>${p.name}</h3><p>${p.d}</p><button class="btn gold" onclick="openPack('${k}')">${p.price} 💰</button></div>`).join("")}</div><div id="reveal"></div>`;
  if(pulled)showReveal();
 }
@@ -73,41 +132,58 @@ function rollCard(P){
  const src=open.length?open:pool.filter(c=>rar(c.o)===k);
  return src.length?pick1(src):null;
 }
-function openPack(k){sfx("pack");const P=PACKS[k];if(S.coins<P.price){toast("Не хватает монет! 💰 Сыграй матч, чтобы заработать");return}
- S.coins-=P.price;pulled=[];
- for(let i=0;i<P.n;i++){
-  const c=rollCard(P);
+function grantPack(k){
+ const pack=PACKS[k], cards=[];
+ for(let i=0;i<pack.n;i++){
+  const c=rollCard(pack);
   if(!c){console.warn("Пустой пул карт для",k);continue}
-  let dup=!!S.own[c.id],gain=0;
-  if(dup){gain=SELL[rar(c.o)];S.coins+=gain}else S.own[c.id]=1;
-  pulled.push({id:c.id,dup,gain});
+  const dup=!!S.own[c.id], gain=dup?SELL[rar(c.o)]:0;
+  if(dup)S.coins+=gain;
+  else S.own[c.id]=1;
+  cards.push({id:c.id,dup,gain});
  }
  S.stats.packs++;
- let gotBooster=null;
- if(Math.random()<BOOSTER_DROP){
-  const bkey=pick1(Object.keys(BOOSTERS));
-  S.boosters[bkey]=(S.boosters[bkey]||0)+1;
-  gotBooster=bkey;
+ const booster=Math.random()<BOOSTER_DROP?pick1(Object.keys(BOOSTERS)):null;
+ if(booster)S.boosters[booster]=(S.boosters[booster]||0)+1;
+ return {cards,booster};
+}
+function revealGrantedPack({cards,booster}){
+ pulled=cards;
+ sfx("pack");
+ setCoins(true);
+ showReveal();
+ $("#reveal").scrollIntoView({behavior:"smooth"});
+ if(booster){
+  toast("🎁 Выпал бустер: "+BOOSTERS[booster].e+" "+BOOSTERS[booster].n);
+  confetti(15);
  }
- save();setCoins(true);showReveal();$("#reveal").scrollIntoView({behavior:"smooth"});
- if(gotBooster){setTimeout(()=>toast(`🎁 Выпал бустер: ${BOOSTERS[gotBooster].e} ${BOOSTERS[gotBooster].n}`),1200);confetti(15)}
  checkAch();
+}
+function openPack(k){
+ const pack=PACKS[k];
+ if(!pack)return;
+ if(S.coins<pack.price){toast("Не хватает монет! 💰 Сыграй матч, чтобы заработать");return}
+ S.coins-=pack.price;
+ const reward=grantPack(k);
+ save();
+ revealGrantedPack(reward);
 }
 function showReveal(){$("#reveal").innerHTML=`<h2>Нажимай на карты, чтобы открыть! 👆</h2><div class="row" style="margin-bottom:40px">${pulled.map((x,i)=>`<div class="flip" onclick="flip(this,${i})"><div class="flip-in"><div class="front"><span>⚽</span><b>FUT</b></div><div class="back">${card(DB[x.id])}${x.dup?`<div class="dup">ДУБЛЬ! продан +${x.gain} 💰</div>`:`<div class="new">НОВАЯ КАРТА! ✨</div>`}</div></div></div>`).join("")}</div><div style="text-align:center"><button class="btn" onclick="revealAll()">Открыть все</button></div>`}
 function flip(el,i){if(el.classList.contains("open"))return;el.classList.add("open","flash");setTimeout(()=>el.classList.remove("flash"),900);
  const c=DB[pulled[i].id],r=rar(c.o);if(r==="icon"){screenFlash();confetti(c.s?120:60)}else if(r==="epic"){confetti(30)}else if(r==="gold"){confetti(18)}}
 function revealAll(){document.querySelectorAll(".flip:not(.open)").forEach((el,j)=>setTimeout(()=>el.click(),j*350))}
-function teamRate(){const f=S.lineup.map(id=>Number.isInteger(id)&&DB[id]?DB[id]:null).filter(Boolean);return f.length?f.reduce((a,c)=>a+ovrOf(c),0)/f.length:0}
+function teamRate(){const f=S.lineup.map(id=>Number.isInteger(id)&&DB[id]?DB[id]:null).filter(Boolean);return f.length?f.reduce((a,c)=>a+ovrOf(c),0)/f.length+chemInfo().bonus:0}
 // ===== ПОЛЕ 7 СЛОТОВ: 3-2-1, без пересечений =====
 const XY=[[50,90],[18,65],[50,65],[82,65],[30,38],[70,38],[50,11]];
 function squad(){
  const r=teamRate();
+ const chemistry=chemInfo();
  const skills={};
  S.lineup.forEach(id=>{if(id==null)return;skillsOf(DB[id]).forEach(s=>skills[s]=(skills[s]||0)+1)});
  const sklHtml=Object.keys(skills).length?`<div class="sklbox"><h3>🎖️ Навыки команды</h3>${Object.entries(skills).map(([s,n])=>`<div class="sklrow">${SKILLS[s].e} <b>${SKILLS[s].n}</b> ×${n} — ${SKILLS[s].d}</div>`).join("")}</div>`:"";
  const bstEntries=Object.entries(S.boosters||{}).filter(([k,v])=>v>0);
  const bstHtml=`<div class="bstbox"><h3>🎁 Бустеры (до 3 применятся в матче)</h3>${bstEntries.length?bstEntries.map(([k,v])=>`<div class="brow">${BOOSTERS[k].e} <b>${BOOSTERS[k].n}</b> ×${v} — ${BOOSTERS[k].d}</div>`).join(""):`<div class="brow">Нет бустеров. Открой паки!</div>`}</div>`;
- $("#view").innerHTML=`<div class="teamr"><small>${TEAM_EMOJI} ${TEAM_NAME} · ОБЩИЙ РЕЙТИНГ</small><div class="big">${r?Math.round(r):"—"}</div></div><div class="field">${POS.map((p,i)=>{const id=S.lineup[i],c=id!=null?DB[id]:null;
+ $("#view").innerHTML=`<div class="teamr"><small>${TEAM_EMOJI} ${TEAM_NAME} · ОБЩИЙ РЕЙТИНГ</small><div class="big">${r?Math.round(r):"—"}</div></div><section class="chemistry"><strong>Сыгранность · +${chemistry.bonus} OVR</strong>${chemistry.lines.length?chemistry.lines.map(line=>"<div>"+line+"</div>").join(""):"<div>Поставь 3 игроков 🔴⚪ или 3 карты текущего сезона.</div>"}</section><div class="field">${POS.map((p,i)=>{const id=S.lineup[i],c=id!=null?DB[id]:null;
  return `<div class="slot" style="left:${XY[i][0]}%;top:${XY[i][1]}%" onclick="pick(${i})">${c?card(c):`<div class="empty">+<br>${p}</div>`}</div>`}).join("")}</div><p style="text-align:center;color:#8fd">Нажми на позицию, чтобы выбрать игрока или прокачать его</p>${sklHtml}${bstHtml}`;
 }
 function pick(i){
@@ -155,13 +231,21 @@ function cup(){let c=S.cup||(S.cup={active:false,stage:0,trophies:0,freePacks:0}
 function startCup(){S.cup={...(S.cup||{}),active:true,stage:0,matchPending:false};save();cup()}
 function playCupRound(){let c=S.cup;if(!c||!c.active)return;if(S.lineup.some(x=>x==null)){toast('Сначала собери состав из 7 игроков');return}c.matchPending=true;S.next={n:['Кубковые Волки','Кубковые Титаны','Финальные Легенды'][c.stage],e:['🐺','⚡','👑'][c.stage],r:CUP_ROUNDS[c.stage].r};save();tab='match';nav();match()}
 function recordCupResult(win){let c=S.cup;if(!c||!c.active||!c.matchPending)return;c.matchPending=false;if(!win){c.active=false;c.eliminated=true;S.coins+=150;toast('Кубок окончен: утешительный приз +150💰')}else if(++c.stage===3){c.active=false;c.trophies=(c.trophies||0)+1;c.freePacks=1;S.coins+=2500;confetti(90);sfx('win');toast('Кубок выигран! +2500💰, золотой пак и трофей')}save()}
-function claimCupPack(){if(!S.cup||!S.cup.freePacks)return;S.coins+=PACKS.gold.price;openPack('gold');S.coins-=PACKS.gold.price;S.cup.freePacks=0;save();setCoins(true);cup()}
+function claimCupPack(){
+ if(busy||trainingOpen||!S.cup?.freePacks)return;
+ S.cup.freePacks=0;
+ const reward=grantPack("gold");
+ save();
+ go("shop");
+ revealGrantedPack(reward);
+}
 function setTactic(k){tactic=k;
  document.querySelectorAll(".tactics .btn").forEach(b=>b.classList.remove("on"));
  const idx=Object.keys(TACTICS).indexOf(k);
  const btns=document.querySelectorAll(".tactics .btn");
  if(btns[idx])btns[idx].classList.add("on");
 }
+let cancelPenaltyShootout=null;
 function penaltyShootout(){
  return new Promise(resolve=>{
   penaltyOpen=true;
@@ -171,36 +255,48 @@ function penaltyShootout(){
    $("#mbox").innerHTML=`<h2>🥅 Серия пенальти!</h2>
     <div class="pen">
      <div class="stat">Ты: <b>${pScore}</b> · Соперник: <b>${aiScore}</b></div>
-     <p>Раунд ${round+1} из 3. Куда бьём?</p>
+     <p>${round<3 ? "Раунд "+(round+1)+" из 3" : "Раунд "+(round+1)+" · дополнительные удары"}. Куда бьём?</p>
      <div class="dirs">${dirs.map((d,i)=>`<button class="btn big" onclick="window.__pen(${i})">${d}</button>`).join("")}</div>
     </div>`;
-   $("#modal").style.display="flex";
+   openM();
   }
-  window.__pen=(dir)=>{
+  function closeSeries(){
+   delete window.__pen;
+   cancelPenaltyShootout=null;
+   penaltyOpen=false;
+   closeM();
+  }
+  cancelPenaltyShootout=()=>{closeSeries();resolve(null)};
+  const takePenalty=(dir)=>{
+   if(!penaltyOpen||window.__pen!==takePenalty)return;
    const aiDir=Math.floor(Math.random()*3);
    if(dir!==aiDir)pScore++;
    if(Math.random()<.5)aiScore++;
    round++;
-   if(round<3)render();
+   if(round<3 || pScore===aiScore)render();
    else{
-    penaltyOpen=false;closeM();
+    closeSeries();
     const win=pScore>aiScore;
     if(win)S.stats.penWins++;
     save();toast(win?"🏆 Победа по пенальти!":"😤 Поражение по пенальти");
     resolve({a:pScore,b:aiScore,win});
    }
   };
+  window.__pen=takePenalty;
   render();
  });
 }
-function finish(a,b,luckBonus){
+function finish(a,b,luckBonus,shootout=null){
  if(finished)return;finished=true;
  clearMatchTimers();
- const win=a>b, isDraw=a===b, base=win?250:isDraw?120:60;
+ const win=shootout ? shootout.win : a>b, isDraw=!shootout && a===b, base=win?250:isDraw?120:60;
  const divMult=1 + S.div*0.12;
  const lucky=S.lineup.some(id=>id!=null&&skillsOf(DB[id]).includes("lucky"));
+ const coinsBefore=S.coins;
  const gain=Math.round(base*TACTICS[tactic].reward*divMult)+(lucky?50:0)+(luckBonus||0);
- S.coins+=gain;
+ const session=match2dState;
+ const contract=session && session.contractDone>=session.contractTarget ? COACH_CONTRACTS[session.contractKey] : null;
+ S.coins+=gain+(contract?.reward||0);
  S.stats.matches++;S.stats.goals+=a;
  if(win){S.stats.wins++;}
  // ===== ОЧКИ ДИВИЗИОНА: победа +3, ничья +1 =====
@@ -217,15 +313,27 @@ function finish(a,b,luckBonus){
   if(S._winStreak>S.bestStreak)S.bestStreak=S._winStreak;
  }else S._winStreak=0;
  newOpp();recordCupResult(win);save();setCoins(true);checkAch();
- const l=document.createElement("div");l.className="ln r";
  const ptsLabel=win?"+3 очк.":isDraw?"+1 очк.":"+0 очк.";
- l.textContent=(win?"🏆 ПОБЕДА! ":isDraw?"🤝 НИЧЬЯ! ":"😤 ПОРАЖЕНИЕ! ")+`+${gain} 💰 · ${ptsLabel}`+(lucky?" 🍀":"")+(luckBonus?" 🎁":"");$("#log").appendChild(l);
+ const outcome=win?"🏆 ПОБЕДА!":isDraw?"🤝 НИЧЬЯ!":"😤 ПОРАЖЕНИЕ!";
+ const bonuses=[];
+ if(lucky)bonuses.push("удача +50 💰");
+ if(luckBonus)bonuses.push("бустеры +"+luckBonus+" 💰");
+ if(contract)bonuses.push("📋 "+contract.name+" +"+contract.reward+" 💰");
+ const extra=S.coins-coinsBefore-gain-(contract?.reward||0);
+ if(extra>0)bonuses.push("другие награды +"+extra+" 💰");
+ const series=shootout ? " (пен. "+shootout.a+":"+shootout.b+")" : "";
+ addMatchEvent(outcome+" "+a+":"+b+series+" · +"+(S.coins-coinsBefore)+" 💰 · "+ptsLabel+
+  (bonuses.length?" ("+bonuses.join(", ")+")":""));
  if(win)confetti(90);
  const vs=$("#vs");if(vs)vs.innerHTML=vsHtml();
  const db=document.querySelector(".divbar");if(db)db.parentElement.outerHTML=divBar();
- document.querySelectorAll("#view .btn").forEach(b=>{if(b.textContent.includes("Пропустить"))b.remove()});
- const playBtn=$("#play");if(playBtn){playBtn.disabled=false;playBtn.textContent="▶ Играть ещё"}
+ const wins=$("#view .wins");if(wins)wins.textContent="🏆 Побед всего: "+S.wins;
+ $("#skipMatch")?.setAttribute("disabled","");
+ $("#speedToggle")?.setAttribute("disabled","");
+ const playBtn=$("#matchStart");
+ if(playBtn){playBtn.disabled=false;playBtn.textContent="▶ Играть ещё"}
  busy=false;
+ offerContracts();
 }
 function train(){
  const today=new Date().toDateString();if(S.trainToday!==today){S.trainToday=today;S.trainUsed=0;save()}
@@ -381,14 +489,14 @@ function getProg(id,S){
   case "collect_30":case "collect_80":case "collect_130":return DB.filter(c=>S.own[c.id]).length;
   case "up_5":return Object.values(S.lvl).some(v=>v>=5)?1:0;
   case "epic_10":return DB.filter(c=>!c.s&&rar(c.o)==="epic"&&S.own[c.id]).length;
-  case "daily_7":return S.streak;
+  case "daily_7":return S.dailyCycleCompleted?7:S.dailyDays;
   case "pack_10":return S.stats.packs;
   case "season_1":return seasonCollected(S);
   case "train_3":case "train_10":return S.stats.trainOk;
  }
  return 0;
 }
-function resetAll(){if(confirm("Точно начать заново? Все монеты и карточки пропадут!")){clearMatchTimers();trainingOpen=false;S=fresh();save();go("shop");setCoins()}}
+function resetAll(){if(confirm("Точно начать заново? Все монеты и карточки пропадут!")){if(typeof stopMatch2d==="function")stopMatch2d();else clearMatchTimers();trainingOpen=false;if($("#modal").style.display==="flex")closeM();const reset={...fresh(),rev:S.rev};if(!save(reset))return;S=reset;go("shop");setCoins()}}
 
 // Boot the menu independently of the optional match engine. All classic scripts are loaded in document order.
 document.addEventListener("DOMContentLoaded",function(){try{S=load();setCoins();nav();shop();const soundButton=document.querySelector("#soundToggle");if(soundButton)soundButton.textContent=soundOn?"🔊":"🔇";if(window.__badSave)toast("⚠️ Сохранение повреждено; исходная копия сохранена отдельно")}catch(error){console.error("FUT Mini startup failed",error);const view=document.querySelector("#view");if(view)view.textContent="Не удалось запустить игру. Обновите страницу или проверьте файлы JavaScript."}},{once:true});

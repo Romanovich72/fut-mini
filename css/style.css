@@ -152,4 +152,15 @@ footer button{background:none;border:1px solid #567;color:#89a;border-radius:8px
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 :root{--sat:env(safe-area-inset-top,0px);--sar:env(safe-area-inset-right,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px)}html{touch-action:manipulation}body{min-height:100vh;min-height:100dvh;padding:0 var(--sar) var(--sab) var(--sal);touch-action:manipulation}button,.btn,.flip,.slot,.target,.arrow{touch-action:manipulation}.modal{padding:calc(14px + var(--sat)) calc(14px + var(--sar)) calc(14px + var(--sab)) calc(14px + var(--sal));overscroll-behavior:contain}.modal>div{max-height:calc(88dvh - var(--sat) - var(--sab));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}body.modal-open{position:fixed;width:100%;overflow:hidden}@media(max-width:600px){header{padding-top:calc(12px + var(--sat))}.field{width:min(440px,calc(100vw - 28px - var(--sal) - var(--sar)));height:min(620px,calc(100dvh - 250px))}
 }
-#matchCanvas{display:block;width:100%;max-width:980px;aspect-ratio:16/9;margin:12px auto;border:3px solid #dff;border-radius:18px;background:#147b39;touch-action:none;box-shadow:0 0 24px #00e5ff77}.match-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px}.match-events{max-width:900px;margin:8px auto;min-height:54px;padding:8px 12px;background:#0b1650;border-radius:12px;color:#dff}.key-overlay{position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);background:#06113be8;border:2px solid #ffd93b;border-radius:14px;padding:12px;text-align:center}.match-stage{position:relative}
+#matchCanvas{display:block;width:100%;max-width:980px;aspect-ratio:16/9;margin:12px auto;border:3px solid #dff;border-radius:18px;background:#147b39;touch-action:none;box-shadow:0 0 24px #00e5ff77}.match-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px}.match-events{max-width:900px;margin:8px auto;min-height:54px;padding:8px 12px;background:#0b1650;border-radius:12px;color:#dff}.match-stage{position:relative}
+
+.chemistry,#contractPanel{max-width:620px;margin:12px auto;padding:12px 16px;border:1px solid #357592;border-radius:14px;background:#0b1939;color:#cef5ff;text-align:center}
+.chemistry div{margin-top:5px}
+.contract-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.contract-choices button{display:grid;gap:4px;padding:10px;border:2px solid #375676;border-radius:10px;background:#142642;color:#e6f4ff;font:inherit;cursor:pointer;touch-action:manipulation}
+.contract-choices button[aria-pressed=true]{border-color:#43e5fc;background:#0b3549}
+.contract-choices button[aria-pressed=true] b::before{content:"✓ "}
+.contract-choices strong{color:#ffd966}
+.contract-progress{font-weight:700}
+.contract-progress.complete{color:#83ffaf}
+@media(max-width:400px){.contract-choices button{font-size:14px;padding:8px 5px}}

@@ -9,7 +9,7 @@ function fresh(){
  ];
  const own={};st.forEach(i=>own[i]=1);
  return{
-  coins:1000,own,lineup:st,wins:0,next:null,lvl:{},div:0,divPoints:0,daily:"",streak:0,cup:{active:false,stage:0,trophies:0,freePacks:0},
+  coins:1000,own,lineup:st,wins:0,next:null,lvl:{},div:0,divPoints:0,daily:"",dailyDays:0,dailyCycleCompleted:false,rev:0,cup:{active:false,stage:0,trophies:0,freePacks:0},
   season:0,
   stats:{goals:0,wins:0,penWins:0,collected:0,packs:0,matches:0,trainOk:0},
   achDone:{},bestStreak:0,
@@ -17,8 +17,65 @@ function fresh(){
   boosters:{}
  };
 }
-function load(){const d=fresh();try{const raw=localStorage.getItem(KEY);if(!raw)return d;const x=JSON.parse(raw);if(!x||typeof x!=='object'||Array.isArray(x)||!x.own||typeof x.own!=='object')throw Error('bad save');const n=(v,f,min=0,max=1e9)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):f;const own={};for(const k of Object.keys(x.own)){const id=+k;if(Number.isInteger(id)&&id>=0&&id<DB.length&&x.own[k])own[id]=1}if(!Object.keys(own).length)throw Error('no cards');const stats={...d.stats,...(x.stats||{})};for(const k of Object.keys(d.stats))stats[k]=n(stats[k],0);const lvl={};if(x.lvl&&typeof x.lvl==='object')for(const[k,v]of Object.entries(x.lvl)){const id=+k;if(Number.isInteger(id)&&id>=0&&id<DB.length)lvl[id]=n(v,1,1,20)}const today=new Date().toDateString();let trainToday=typeof x.trainToday==='string'?x.trainToday:'',trainUsed=n(x.trainUsed,0,0,3);if(trainToday!==today){trainToday=today;trainUsed=0}const lineup=Array.from({length:7},(_,i)=>{const id=Array.isArray(x.lineup)?x.lineup[i]:null;return Number.isInteger(id)&&id>=0&&id<DB.length&&own[id]?id:d.lineup[i]});const z={...d,...x,cup:(()=>{let c=x.cup;if(!c||typeof c!=='object')return d.cup;return {active:!!c.active,stage:n(c.stage,0,0,3),trophies:n(c.trophies,0),freePacks:n(c.freePacks,0,0,1),matchPending:!!c.matchPending}})(),own,lineup,lvl,stats,trainToday,trainUsed,coins:n(x.coins,d.coins),wins:n(x.wins,0),div:n(x.div,0,0,DIVISIONS.length-1),divPoints:n(x.divPoints,x.divWins?n(x.divWins,0)*3:0),streak:n(x.streak,0),bestStreak:n(x.bestStreak,0),daily:typeof x.daily==='string'?x.daily:'',achDone:x.achDone&&typeof x.achDone==='object'?x.achDone:{},trainBonus:x.trainBonus&&typeof x.trainBonus==='object'?x.trainBonus:{},boosters:x.boosters&&typeof x.boosters==='object'?x.boosters:{},next:x.next&&typeof x.next==='object'?x.next:null};if(z.next)z.next.r=n(z.next.r,60,0,120);return z}catch(e){try{const raw=localStorage.getItem(KEY);if(raw)localStorage.setItem(KEY+'_corrupt_'+Date.now(),raw)}catch(_){}window.__badSave=true;return d}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){if(!window.__saveWarned){window.__saveWarned=true;setTimeout(()=>toast("⚠️ Не удалось сохранить прогресс"),0)}return false}}
+function readRevision(value){
+ return Number.isSafeInteger(value) && value>=0 ? value : 0;
+}
+
+function validBoosters(values){
+ return Object.fromEntries(Object.keys(BOOSTERS)
+  .filter(key=>Number.isSafeInteger(values?.[key]) && values[key]>=0)
+  .map(key=>[key,values[key]]));
+}
+
+function validTrainingBonuses(values){
+ const bonuses={};
+ for(const card of DB){
+  const old=values?.[card.id];
+  if(!old || typeof old!=="object")continue;
+  const points={};
+  let remaining=5;
+  for(let stat=0;stat<4 && remaining>0;stat++){
+   const raw=old[stat];
+   if(!Number.isFinite(raw) || raw<1)continue;
+   points[stat]=Math.min(remaining,Math.floor(raw));
+   remaining-=points[stat];
+  }
+  if(remaining<5)bonuses[card.id]=points;
+ }
+ return bonuses;
+}
+
+function load(){const d=fresh();try{const raw=localStorage.getItem(KEY);if(!raw)return d;const x=JSON.parse(raw);if(!x||typeof x!=='object'||Array.isArray(x)||!x.own||typeof x.own!=='object')throw Error('bad save');const n=(v,f,min=0,max=1e9)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):f;const own={};for(const k of Object.keys(x.own)){const id=+k;if(Number.isInteger(id)&&id>=0&&id<DB.length&&x.own[k])own[id]=1}if(!Object.keys(own).length)throw Error('no cards');const stats={...d.stats,...(x.stats||{})};for(const k of Object.keys(d.stats))stats[k]=n(stats[k],0);const lvl={};if(x.lvl&&typeof x.lvl==='object')for(const[k,v]of Object.entries(x.lvl)){const id=+k;if(Number.isInteger(id)&&id>=0&&id<DB.length)lvl[id]=n(v,1,1,20)}const today=new Date().toDateString();let trainToday=typeof x.trainToday==='string'?x.trainToday:'',trainUsed=n(x.trainUsed,0,0,3);if(trainToday!==today){trainToday=today;trainUsed=0}const lineup=Array.from({length:7},(_,i)=>{const id=Array.isArray(x.lineup)?x.lineup[i]:null;return Number.isInteger(id)&&id>=0&&id<DB.length&&own[id]?id:d.lineup[i]});const z={...d,...x,cup:(()=>{let c=x.cup;if(!c||typeof c!=='object')return d.cup;return {active:!!c.active,stage:Math.floor(n(c.stage,0,0,c.active?2:3)),trophies:n(c.trophies,0),freePacks:n(c.freePacks,0,0,1),matchPending:!!c.matchPending}})(),own,lineup,lvl,stats,trainToday,trainUsed,coins:n(x.coins,d.coins),wins:n(x.wins,0),div:Math.floor(n(x.div,0,0,DIVISIONS.length-1)),
+ divPoints:Math.floor(n(x.divPoints,n(x.divWins,0)*3)),rev:readRevision(x.rev),
+ dailyDays:Math.floor(n(x.dailyDays,n(x.streak,0,0,7),0,7)),
+ dailyCycleCompleted:x.dailyCycleCompleted===true || !!x.achDone?.daily_7,
+ bestStreak:Math.floor(n(Object.hasOwn(x,"dailyDays")?x.bestStreak:x._winStreak,0)),
+ _winStreak:Math.floor(n(x._winStreak,0)),daily:typeof x.daily==='string'?x.daily:'',achDone:x.achDone&&typeof x.achDone==='object'?x.achDone:{},trainBonus:validTrainingBonuses(x.trainBonus),boosters:validBoosters(x.boosters),next:x.next&&typeof x.next==='object'?x.next:null};delete z.streak;if(z.next)z.next.r=n(z.next.r,60,0,120);return z}catch(e){try{const raw=localStorage.getItem(KEY);if(raw)localStorage.setItem(KEY+'_corrupt_'+Date.now(),raw)}catch(_){}window.__badSave=true;return d}}
+function save(state=S){
+ try{
+  const raw=localStorage.getItem(KEY);
+  let storedRev=0;
+  try{storedRev=readRevision(JSON.parse(raw)?.rev)}catch(_){/* load() backs up corrupt saves. */}
+  if(storedRev>state.rev){
+   if(!window.__saveConflictWarned){
+    window.__saveConflictWarned=true;
+    toast("⚠️ В другой вкладке есть более свежий прогресс. Обнови эту страницу.");
+   }
+   return false;
+  }
+  const rev=state.rev+1;
+  localStorage.setItem(KEY,JSON.stringify({...state,rev}));
+  state.rev=rev;
+  window.__saveConflictWarned=false;
+  return true;
+ }catch(error){
+  if(!window.__saveWarned){
+   window.__saveWarned=true;
+   setTimeout(()=>toast("⚠️ Не удалось сохранить прогресс"),0);
+  }
+  return false;
+ }
+}
 const $=s=>document.querySelector(s), clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), pick1=a=>a[Math.floor(Math.random()*a.length)];
 const lvlOf=id=>S.lvl[id]||1;
 function trainBonusOf(c){const b=S.trainBonus[c.id]||{};return Math.min(5,Object.values(b).reduce((s,v)=>s+v,0))}
@@ -39,4 +96,26 @@ function skillsOf(c){
  if(lvlOf(c.id)>=3 && UNIQUE_SKILL[c.n]) out.push(UNIQUE_SKILL[c.n]);
  if(lvlOf(c.id)>=5) out.push("captain");
  return [...new Set(out)];
+}
+
+function chemInfo(){
+ const cards=[...new Set(S.lineup)].filter(Number.isInteger).map(id=>DB[id]).filter(Boolean);
+ const club=cards.filter(card=>card.c===1).length;
+ const season=currentSeason();
+ const lines=[];
+ let bonus=0;
+ if(club>=3){
+  const strong=club>=5;
+  bonus+=strong?4:2;
+  lines.push(strong?"🔴⚪ Спартак (5+): +4 OVR":"🔴⚪ Спартак (3+): +2 OVR");
+ }
+ if(cards.filter(card=>card.season===season).length>=3){
+  bonus+=2;
+  lines.push("🗓️ Сыгранность сезона (3+): +2 OVR");
+ }
+ if(club>=2 && cards.some(card=>card.s===1)){
+  bonus+=2;
+  lines.push("👑 Лидер атаки 🔴⚪: +2 OVR");
+ }
+ return {bonus,lines};
 }
